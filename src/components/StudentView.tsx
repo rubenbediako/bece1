@@ -1,0 +1,618 @@
+import React, { useState, useRef } from 'react';
+import {
+  Box,
+  Card,
+  CardContent,
+  Typography,
+  Button,
+  Grid,
+  Chip,
+  IconButton,
+  Divider,
+  TextField,
+  Paper,
+  ButtonGroup,
+} from '@mui/material';
+import {
+  ArrowLeft,
+  Play,
+  BookOpen,
+  Calculator,
+  Edit,
+  Trash2,
+} from 'lucide-react';
+import { motion } from 'framer-motion';
+import type { Subject, Topic, Question, PredictedTopic } from '../types';
+import PodcastConversation from './PodcastConversation.tsx';
+
+interface StudentViewProps {
+  subjects: Subject[];
+  topics: Topic[];
+  questions: Question[];
+  predictedTopics: PredictedTopic[];
+}
+
+const MathTextEditor: React.FC<{
+  value: string;
+  onChange: (value: string) => void;
+  placeholder?: string;
+}> = ({ value, onChange, placeholder = 'Enter your mathematical expression...' }) => {
+  const textFieldRef = useRef<HTMLInputElement>(null);
+
+  const insertSymbol = (symbol: string) => {
+    if (textFieldRef.current) {
+      const input = textFieldRef.current;
+      const start = input.selectionStart || 0;
+      const end = input.selectionEnd || 0;
+      const newValue = value.substring(0, start) + symbol + value.substring(end);
+      onChange(newValue);
+    }
+  };
+
+  const clearEditor = () => {
+    onChange('');
+    if (textFieldRef.current) {
+      textFieldRef.current.focus();
+    }
+  };
+
+  const mathSymbols = ['+', '−', '×', '÷', '=', '½', '¼', '²', '³', '√', '±', '∞', 'π', 'Σ', '→', '⃗'];
+
+  return (
+    <Paper elevation={2} sx={{ p: 2, mb: 2 }}>
+      <Typography variant="h6" gutterBottom sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+        <Edit size={20} />
+        Math Expression Editor
+      </Typography>
+      
+      <TextField
+        fullWidth
+        multiline
+        rows={3}
+        value={value}
+        onChange={(e) => { onChange(e.target.value); }}
+        placeholder={placeholder}
+        inputRef={textFieldRef}
+        sx={{ mb: 2 }}
+        variant="outlined"
+      />
+
+      {value && (
+        <Box sx={{ mb: 2, p: 2, bgcolor: 'grey.50', borderRadius: 1 }}>
+          <Typography variant="subtitle2" gutterBottom>
+            Preview:
+          </Typography>
+          <Typography sx={{ fontFamily: 'monospace', fontSize: '1.1em' }}>
+            {value}
+          </Typography>
+        </Box>
+      )}
+
+      <Box sx={{ mb: 2 }}>
+        <ButtonGroup variant="outlined" size="small" sx={{ mb: 1 }}>
+          <Button onClick={clearEditor} startIcon={<Trash2 size={16} />}>
+            Clear
+          </Button>
+        </ButtonGroup>
+      </Box>
+
+      <Grid container spacing={1}>
+        {mathSymbols.map((symbol, index) => (
+          <Grid size={1} key={index}>
+            <Button
+              variant="outlined"
+              onClick={() => { insertSymbol(symbol); }}
+              sx={{ 
+                minWidth: 40, 
+                height: 40,
+                fontSize: '1.2em'
+              }}
+            >
+              {symbol}
+            </Button>
+          </Grid>
+        ))}
+      </Grid>
+    </Paper>
+  );
+};
+
+const StudentView: React.FC<StudentViewProps> = ({
+  subjects,
+  topics,
+  questions,
+  predictedTopics,
+}) => {
+  const [selectedSubject, setSelectedSubject] = useState<Subject | null>(null);
+  const [selectedTopic, setSelectedTopic] = useState<Topic | null>(null);
+  const [selectedQuestion, setSelectedQuestion] = useState<Question | null>(null);
+  const [showAnswer, setShowAnswer] = useState(false);
+  const [mathExpression, setMathExpression] = useState('');
+  const [showMathEditor, setShowMathEditor] = useState(false);
+  const [showPodcast, setShowPodcast] = useState(false);
+
+  const getPredictedTopicsForSubject = (subjectId: string) => {
+    return predictedTopics
+      .filter(pt => pt.subjectId === subjectId && pt.isActive)
+      .map(pt => ({
+        ...topics.find(t => t.id === pt.topicId)!,
+        probability: pt.probability,
+        reasoning: pt.reasoning,
+      }))
+      .sort((a, b) => b.probability - a.probability);
+  };
+
+  const getQuestionsForTopic = (topicId: string) => {
+    return questions.filter(q => q.topicId === topicId);
+  };
+
+  const handleBackToSubjects = () => {
+    setSelectedSubject(null);
+    setSelectedTopic(null);
+    setSelectedQuestion(null);
+    setShowAnswer(false);
+    setShowPodcast(false);
+  };
+
+  const handleBackToTopics = () => {
+    setSelectedTopic(null);
+    setSelectedQuestion(null);
+    setShowAnswer(false);
+    setShowPodcast(false);
+  };
+
+  const handleBackToQuestions = () => {
+    setSelectedQuestion(null);
+    setShowAnswer(false);
+    setShowPodcast(false);
+  };
+
+  const handlePlayPodcast = () => {
+    setShowPodcast(true);
+  };
+
+  const handleClosePodcast = () => {
+    setShowPodcast(false);
+  };
+
+  // Subject Selection View
+  if (!selectedSubject) {
+    return (
+      <Box>
+        <Typography variant="h4" gutterBottom sx={{ mb: 4, textAlign: 'center' }}>
+          🎓 BECE 2026 Exam Prediction
+        </Typography>
+        
+        <Typography variant="h6" gutterBottom sx={{ mb: 3 }}>
+          Select a Subject to Start:
+        </Typography>
+
+        <Grid container spacing={3}>
+          {subjects.map((subject) => {
+            const predictedTopicsCount = getPredictedTopicsForSubject(subject.id).length;
+            const questionsCount = questions.filter(q => q.subjectId === subject.id).length;
+            
+            return (
+              <Grid size={{ xs: 12, sm: 6, md: 4 }} key={subject.id}>
+                <motion.div
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
+                >
+                  <Card 
+                    sx={{ 
+                      cursor: 'pointer', 
+                      height: '100%',
+                      transition: 'all 0.3s ease',
+                      '&:hover': {
+                        boxShadow: 8,
+                        bgcolor: 'primary.main',
+                        color: 'white',
+                        '& .MuiChip-root': {
+                          bgcolor: 'white',
+                          color: 'primary.main'
+                        }
+                      }
+                    }}
+                    onClick={() => { setSelectedSubject(subject); }}
+                  >
+                    <CardContent>
+                      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 2 }}>
+                        <Typography variant="h6" component="h2">
+                          {subject.name}
+                        </Typography>
+                        <BookOpen size={24} />
+                      </Box>
+                      
+                      <Typography variant="body2" sx={{ mb: 2, minHeight: 40 }}>
+                        {subject.description}
+                      </Typography>
+                      
+                      <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap' }}>
+                        <Chip 
+                          label={`${predictedTopicsCount} Predictions`} 
+                          size="small" 
+                          color="primary"
+                        />
+                        <Chip 
+                          label={`${questionsCount} Questions`} 
+                          size="small" 
+                          variant="outlined"
+                        />
+                      </Box>
+                    </CardContent>
+                  </Card>
+                </motion.div>
+              </Grid>
+            );
+          })}
+        </Grid>
+
+        {/* Math Editor Section */}
+        <Box sx={{ mt: 6 }}>
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 3 }}>
+            <Typography variant="h5">🧮 Math Practice Zone</Typography>
+            <Button 
+              variant={showMathEditor ? "contained" : "outlined"}
+              onClick={() => { setShowMathEditor(!showMathEditor); }}
+              startIcon={<Calculator />}
+            >
+              {showMathEditor ? 'Hide' : 'Show'} Math Editor
+            </Button>
+          </Box>
+
+          {showMathEditor && (
+            <MathTextEditor 
+              value={mathExpression}
+              onChange={setMathExpression}
+              placeholder="Practice writing mathematical expressions here..."
+            />
+          )}
+        </Box>
+      </Box>
+    );
+  }
+
+  // Topic Selection View
+  if (!selectedTopic) {
+    const predictedTopics = getPredictedTopicsForSubject(selectedSubject.id);
+    
+    return (
+      <Box>
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 4 }}>
+          <IconButton onClick={handleBackToSubjects}>
+            <ArrowLeft />
+          </IconButton>
+          <Typography variant="h4">
+            {selectedSubject.name} - Predicted Topics
+          </Typography>
+        </Box>
+
+        {predictedTopics.length === 0 ? (
+          <Typography variant="h6" sx={{ textAlign: 'center', color: 'text.secondary', mt: 4 }}>
+            No predictions available for this subject yet.
+          </Typography>
+        ) : (
+          <Grid container spacing={3}>
+            {predictedTopics.map((topic) => {
+              const questionsCount = getQuestionsForTopic(topic.id).length;
+              
+              return (
+                <Grid size={{ xs: 12, md: 6 }} key={topic.id}>
+                  <motion.div
+                    whileHover={{ scale: 1.02 }}
+                    whileTap={{ scale: 0.98 }}
+                  >
+                    <Card 
+                      sx={{ 
+                        cursor: 'pointer',
+                        height: '100%',
+                        transition: 'all 0.3s ease',
+                        '&:hover': {
+                          boxShadow: 6,
+                          bgcolor: 'success.main',
+                          color: 'white',
+                          '& .MuiChip-root': {
+                            bgcolor: 'white',
+                            color: 'success.main'
+                          }
+                        }
+                      }}
+                      onClick={() => { setSelectedTopic(topic); }}
+                    >
+                      <CardContent>
+                        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 2 }}>
+                          <Typography variant="h6">
+                            {topic.name}
+                          </Typography>
+                          <Chip 
+                            label={`${topic.probability}%`}
+                            color={topic.probability >= 80 ? 'error' : topic.probability >= 70 ? 'warning' : 'info'}
+                            sx={{ fontWeight: 'bold' }}
+                          />
+                        </Box>
+                        
+                        <Typography variant="body2" sx={{ mb: 2, minHeight: 40 }}>
+                          {topic.description}
+                        </Typography>
+                        
+                        <Typography variant="caption" sx={{ 
+                          display: 'block', 
+                          mb: 2, 
+                          fontStyle: 'italic',
+                          bgcolor: 'grey.100',
+                          p: 1,
+                          borderRadius: 1
+                        }}>
+                          💡 {topic.reasoning}
+                        </Typography>
+                        
+                        <Chip 
+                          label={`${questionsCount} Practice Questions`}
+                          size="small"
+                          variant="outlined"
+                        />
+                      </CardContent>
+                    </Card>
+                  </motion.div>
+                </Grid>
+              );
+            })}
+          </Grid>
+        )}
+      </Box>
+    );
+  }
+
+  // Question Selection View
+  if (!selectedQuestion) {
+    const topicQuestions = getQuestionsForTopic(selectedTopic.id);
+    
+    return (
+      <Box>
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 4 }}>
+          <IconButton onClick={handleBackToTopics}>
+            <ArrowLeft />
+          </IconButton>
+          <Typography variant="h4">
+            {selectedTopic.name} - Practice Questions
+          </Typography>
+        </Box>
+
+        {topicQuestions.length === 0 ? (
+          <Typography variant="h6" sx={{ textAlign: 'center', color: 'text.secondary', mt: 4 }}>
+            No questions available for this topic yet.
+          </Typography>
+        ) : (
+          <Grid container spacing={3}>
+            {topicQuestions.map((question, index) => (
+              <Grid size={{ xs: 12 }} key={question.id}>
+                <motion.div
+                  whileHover={{ scale: 1.01 }}
+                  whileTap={{ scale: 0.99 }}
+                >
+                  <Card 
+                    sx={{ 
+                      cursor: 'pointer',
+                      transition: 'all 0.3s ease',
+                      '&:hover': {
+                        boxShadow: 4,
+                        bgcolor: 'info.main',
+                        color: 'white',
+                        '& .MuiChip-root': {
+                          bgcolor: 'white',
+                          color: 'info.main'
+                        }
+                      }
+                    }}
+                    onClick={() => { setSelectedQuestion(question); }}
+                  >
+                    <CardContent>
+                      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 2 }}>
+                        <Typography variant="h6">
+                          Question {index + 1}
+                        </Typography>
+                        <Box sx={{ display: 'flex', gap: 1 }}>
+                          <Chip 
+                            label={question.difficulty}
+                            color={
+                              question.difficulty === 'hard' ? 'error' : 
+                              question.difficulty === 'medium' ? 'warning' : 'success'
+                            }
+                            size="small"
+                          />
+                          <Chip 
+                            label={`${question.points} pts`}
+                            variant="outlined"
+                            size="small"
+                          />
+                        </Box>
+                      </Box>
+                      
+                      <Typography variant="body1" sx={{ mb: 2 }}>
+                        {question.question}
+                      </Typography>
+                      
+                      {question.type === 'multiple-choice' && question.options && (
+                        <Box>
+                          <Typography variant="subtitle2" sx={{ mb: 1 }}>Options:</Typography>
+                          {question.options.map((option, optIndex) => (
+                            <Typography key={optIndex} variant="body2" sx={{ ml: 2 }}>
+                              {String.fromCharCode(65 + optIndex)}. {option}
+                            </Typography>
+                          ))}
+                        </Box>
+                      )}
+                    </CardContent>
+                  </Card>
+                </motion.div>
+              </Grid>
+            ))}
+          </Grid>
+        )}
+      </Box>
+    );
+  }
+
+  // Question Detail View
+  return (
+    <Box>
+      <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 4 }}>
+        <IconButton onClick={handleBackToQuestions}>
+          <ArrowLeft />
+        </IconButton>
+        <Typography variant="h4">
+          Question Details
+        </Typography>
+      </Box>
+
+      <Card sx={{ mb: 3 }}>
+        <CardContent>
+          <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 3 }}>
+            <Typography variant="h5" gutterBottom>
+              {selectedQuestion.question}
+            </Typography>
+            <Box sx={{ display: 'flex', gap: 1 }}>
+              <Chip 
+                label={selectedQuestion.difficulty}
+                color={
+                  selectedQuestion.difficulty === 'hard' ? 'error' : 
+                  selectedQuestion.difficulty === 'medium' ? 'warning' : 'success'
+                }
+              />
+              <Chip 
+                label={`${selectedQuestion.points} points`}
+                variant="outlined"
+              />
+            </Box>
+          </Box>
+
+          {selectedQuestion.type === 'multiple-choice' && selectedQuestion.options && (
+            <Box sx={{ mb: 3 }}>
+              <Typography variant="h6" gutterBottom>Options:</Typography>
+              <Grid container spacing={2}>
+                {selectedQuestion.options.map((option, index) => (
+                  <Grid size={{ xs: 12, sm: 6 }} key={index}>
+                    <Paper 
+                      sx={{ 
+                        p: 2, 
+                        cursor: 'pointer',
+                        transition: 'all 0.2s ease',
+                        '&:hover': { bgcolor: 'grey.100' }
+                      }}
+                    >
+                      <Typography>
+                        <strong>{String.fromCharCode(65 + index)}.</strong> {option}
+                      </Typography>
+                    </Paper>
+                  </Grid>
+                ))}
+              </Grid>
+            </Box>
+          )}
+
+          <Box sx={{ display: 'flex', gap: 2, mb: 3 }}>
+            <Button
+              variant="contained"
+              onClick={() => { setShowAnswer(!showAnswer); }}
+              startIcon={<BookOpen />}
+            >
+              {showAnswer ? 'Hide Answer' : 'Show Answer'}
+            </Button>
+            <Button
+              variant="outlined"
+              onClick={handlePlayPodcast}
+              startIcon={<Play />}
+            >
+              Play Podcast Explanation
+            </Button>
+          </Box>
+
+          {showAnswer && (
+            <motion.div
+              initial={{ opacity: 0, height: 0 }}
+              animate={{ opacity: 1, height: 'auto' }}
+              transition={{ duration: 0.3 }}
+            >
+              <Divider sx={{ my: 3 }} />
+              
+              {/* Quick Answer */}
+              <Card sx={{ mb: 3, bgcolor: 'success.50', borderLeft: 4, borderColor: 'success.main' }}>
+                <CardContent>
+                  <Typography variant="h6" gutterBottom color="success.main" sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                    ✅ Correct Answer
+                  </Typography>
+                  <Typography variant="h5" fontWeight="bold">
+                    {selectedQuestion.correctAnswer}
+                  </Typography>
+                </CardContent>
+              </Card>
+
+              {/* Explanation */}
+              <Card sx={{ mb: 3, bgcolor: 'info.50', borderLeft: 4, borderColor: 'info.main' }}>
+                <CardContent>
+                  <Typography variant="h6" gutterBottom color="info.main" sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                    💡 Quick Explanation
+                  </Typography>
+                  <Typography variant="body1">
+                    {selectedQuestion.explanation}
+                  </Typography>
+                </CardContent>
+              </Card>
+              
+              {/* Detailed Solution */}
+              <Card sx={{ mb: 3, bgcolor: 'warning.50', borderLeft: 4, borderColor: 'warning.main' }}>
+                <CardContent>
+                  <Typography variant="h6" gutterBottom color="warning.main" sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                    📚 Step-by-Step Solution
+                  </Typography>
+                  <Paper sx={{ p: 3, bgcolor: 'white', border: 1, borderColor: 'divider' }}>
+                    <Typography variant="body1" sx={{ whiteSpace: 'pre-line', lineHeight: 1.6 }}>
+                      {selectedQuestion.solution}
+                    </Typography>
+                  </Paper>
+                </CardContent>
+              </Card>
+
+              {/* Study Tip */}
+              <Card sx={{ bgcolor: 'primary.50', borderLeft: 4, borderColor: 'primary.main' }}>
+                <CardContent>
+                  <Typography variant="h6" gutterBottom color="primary.main" sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                    🎯 Study Tip
+                  </Typography>
+                  <Typography variant="body1">
+                    For better understanding, try the podcast conversation above! Listen to AMA (student) and DAS (teacher) 
+                    discuss this question in detail. It's like having a study buddy explain the solution to you.
+                  </Typography>
+                </CardContent>
+              </Card>
+            </motion.div>
+          )}
+        </CardContent>
+      </Card>
+
+      {/* Math Editor for working out solutions */}
+      <Card>
+        <CardContent>
+          <Typography variant="h6" gutterBottom>
+            📝 Work Out Your Solution:
+          </Typography>
+          <MathTextEditor 
+            value={mathExpression}
+            onChange={setMathExpression}
+            placeholder="Show your working here using mathematical notation..."
+          />
+        </CardContent>
+      </Card>
+
+      {/* Podcast Conversation */}
+      {showPodcast && (
+        <PodcastConversation 
+          question={selectedQuestion}
+          onClose={handleClosePodcast}
+        />
+      )}
+    </Box>
+  );
+};
+
+export default StudentView;
