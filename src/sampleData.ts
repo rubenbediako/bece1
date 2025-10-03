@@ -9,6 +9,7 @@ export const beceSubjects: Subject[] = [
     name: 'Mathematics',
     description: 'Core Mathematics covering algebra, geometry, statistics, and arithmetic',
     topics: [],
+    sections: [],
     createdAt: new Date().toISOString(),
     updatedAt: new Date().toISOString()
   },
@@ -17,6 +18,7 @@ export const beceSubjects: Subject[] = [
     name: 'English Language',
     description: 'English language skills including grammar, comprehension, and composition',
     topics: [],
+    sections: [],
     createdAt: new Date().toISOString(),
     updatedAt: new Date().toISOString()
   },
@@ -25,6 +27,7 @@ export const beceSubjects: Subject[] = [
     name: 'Science',
     description: 'General science covering physics, chemistry, and biology concepts',
     topics: [],
+    sections: [],
     createdAt: new Date().toISOString(),
     updatedAt: new Date().toISOString()
   },
@@ -33,6 +36,7 @@ export const beceSubjects: Subject[] = [
     name: 'Social Studies',
     description: 'Social studies covering history, geography, government, and economics',
     topics: [],
+    sections: [],
     createdAt: new Date().toISOString(),
     updatedAt: new Date().toISOString()
   },
@@ -41,6 +45,7 @@ export const beceSubjects: Subject[] = [
     name: 'Religious and Moral Education',
     description: 'Religious and moral education covering various faiths and ethics',
     topics: [],
+    sections: [],
     createdAt: new Date().toISOString(),
     updatedAt: new Date().toISOString()
   },
@@ -49,6 +54,7 @@ export const beceSubjects: Subject[] = [
     name: 'French',
     description: 'French language learning including grammar, vocabulary, and conversation',
     topics: [],
+    sections: [],
     createdAt: new Date().toISOString(),
     updatedAt: new Date().toISOString()
   },
@@ -57,6 +63,7 @@ export const beceSubjects: Subject[] = [
     name: 'Computing',
     description: 'Computer studies including basic programming, internet, and digital literacy',
     topics: [],
+    sections: [],
     createdAt: new Date().toISOString(),
     updatedAt: new Date().toISOString()
   },
@@ -65,6 +72,7 @@ export const beceSubjects: Subject[] = [
     name: 'Career Technology',
     description: 'Career and technology education including woodwork, metalwork, and technical drawing',
     topics: [],
+    sections: [],
     createdAt: new Date().toISOString(),
     updatedAt: new Date().toISOString()
   },
@@ -73,6 +81,7 @@ export const beceSubjects: Subject[] = [
     name: 'Economics',
     description: 'Basic economic principles, money, banking, and trade',
     topics: [],
+    sections: [],
     createdAt: new Date().toISOString(),
     updatedAt: new Date().toISOString()
   },
@@ -81,6 +90,7 @@ export const beceSubjects: Subject[] = [
     name: 'Creative Arts and Design',
     description: 'Visual arts, music, dance, and creative design principles',
     topics: [],
+    sections: [],
     createdAt: new Date().toISOString(),
     updatedAt: new Date().toISOString()
   }
@@ -94,9 +104,3 @@ export const beceQuestions: Question[] = [];
 
 // Active predictions - managed by admin through the prediction manager
 export const activePredictions: PredictedTopic[] = [];
-
-// Export for compatibility with existing imports
-export const sampleSubjects = beceSubjects;
-export const sampleTopics = beceTopics;
-export const sampleQuestions = beceQuestions;
-export const samplePredictedTopics = activePredictions;

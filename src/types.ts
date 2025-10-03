@@ -3,7 +3,7 @@ export interface Subject {
   name: string;
   description: string;
   topics: Topic[];
-  sections: Section[];
+  sections?: Section[];
   createdAt: string;
   updatedAt: string;
   isPredicted?: boolean;
@@ -50,15 +50,26 @@ export interface Question {
   type: 'multiple-choice' | 'short-answer' | 'essay' | 'practical';
   options?: string[];
   correctAnswer: string;
-  explanation: string;
-  solution: string;
+  explanation?: string;
+  solution?: QuestionSolution;
   difficulty: 'easy' | 'medium' | 'hard';
   points: number;
+  marks?: number;
   tags?: string[];
   subQuestions?: SubQuestion[];
   createdAt: string;
   updatedAt: string;
   isPredicted?: boolean;
+}
+
+export interface QuestionSolution {
+  textSolution?: string;
+  hasPodcast?: boolean;
+  podcastUrl?: string;
+  podcastDuration?: number;
+  podcastTranscript?: string;
+  createdAt: string;
+  updatedAt: string;
 }
 
 export interface SubQuestion {
@@ -68,9 +79,10 @@ export interface SubQuestion {
   type: 'multiple-choice' | 'short-answer' | 'essay' | 'practical';
   options?: string[];
   correctAnswer: string;
-  explanation: string;
-  solution: string;
+  explanation?: string;
+  solution?: QuestionSolution;
   points: number;
+  marks?: number;
   order: number;
   createdAt: string;
   updatedAt: string;

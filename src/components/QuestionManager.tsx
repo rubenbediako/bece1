@@ -28,8 +28,9 @@ import {
   Switch
 } from '@mui/material';
 import { motion } from 'framer-motion';
-import { Plus, Edit, Trash2, ChevronDown, BookOpen, Calculator } from 'lucide-react';
-import type { Subject, Topic, Question } from '../types';
+import { Plus, Edit, Trash2, ChevronDown, BookOpen, Calculator, Volume2, Mic, Play } from 'lucide-react';
+import type { Subject, Topic, Question, QuestionSolution } from '../types';
+import PodcastGenerator from './PodcastGenerator';
 
 interface QuestionManagerProps {
   subjects: Subject[];
@@ -49,6 +50,7 @@ const QuestionManager: React.FC<QuestionManagerProps> = ({
   const [selectedSubject, setSelectedSubject] = useState('');
   const [expandedAccordion, setExpandedAccordion] = useState<string | false>(false);
   const [showMathEditor, setShowMathEditor] = useState(false);
+  const [showPodcastGenerator, setShowPodcastGenerator] = useState(false);
 
   const [formData, setFormData] = useState({
     subjectId: '',
@@ -58,9 +60,10 @@ const QuestionManager: React.FC<QuestionManagerProps> = ({
     options: ['', '', '', ''],
     correctAnswer: '',
     explanation: '',
-    solution: '',
+    solution: undefined as QuestionSolution | undefined,
     difficulty: 'medium' as Question['difficulty'],
     points: 1,
+    marks: undefined as number | undefined,
     isPredicted: false
   });
 
@@ -74,10 +77,11 @@ const QuestionManager: React.FC<QuestionManagerProps> = ({
         type: question.type,
         options: question.options || ['', '', '', ''],
         correctAnswer: question.correctAnswer,
-        explanation: question.explanation,
-        solution: question.solution || '',
+        explanation: question.explanation || '',
+        solution: question.solution,
         difficulty: question.difficulty,
         points: question.points,
+        marks: question.marks,
         isPredicted: question.isPredicted || false
       });
     } else {
@@ -90,9 +94,10 @@ const QuestionManager: React.FC<QuestionManagerProps> = ({
         options: ['', '', '', ''],
         correctAnswer: '',
         explanation: '',
-        solution: '',
+        solution: undefined,
         difficulty: 'medium',
         points: 1,
+        marks: undefined,
         isPredicted: false
       });
     }
@@ -103,12 +108,13 @@ const QuestionManager: React.FC<QuestionManagerProps> = ({
     setOpen(false);
     setEditingQuestion(null);
     setShowMathEditor(false);
+    setShowPodcastGenerator(false);
   };
 
   const handleSave = () => {
     if (!formData.subjectId || !formData.topicId || !formData.question.trim() || 
-        !formData.correctAnswer.trim() || !formData.explanation.trim() || !formData.solution.trim()) {
-      alert('Please fill in all required fields');
+        !formData.correctAnswer.trim()) {
+      alert('Please fill in all required fields (Subject, Topic, Question, and Correct Answer)');
       return;
     }
 
@@ -116,6 +122,9 @@ const QuestionManager: React.FC<QuestionManagerProps> = ({
 
     const questionData = {
       ...formData,
+      explanation: formData.explanation || undefined,
+      solution: formData.solution || undefined,
+      marks: formData.marks || undefined,
       options: formData.type === 'multiple-choice' ? formData.options.filter(opt => opt.trim()) : undefined
     };
 
@@ -179,6 +188,18 @@ const QuestionManager: React.FC<QuestionManagerProps> = ({
     acc[key].push(question);
     return acc;
   }, {});
+
+  const handleOpenPodcastGenerator = () => {
+    setShowPodcastGenerator(true);
+  };
+
+  const handleSaveSolution = (solution: QuestionSolution) => {
+    setFormData(prev => ({
+      ...prev,
+      solution
+    }));
+    setShowPodcastGenerator(false);
+  };
 
   return (
     <Box>
@@ -274,6 +295,18 @@ const QuestionManager: React.FC<QuestionManagerProps> = ({
                                   } 
                                 />
                                 <Chip label={`${question.points} pts`} size="small" variant="outlined" />
+                                {question.marks && (
+                                  <Chip label={`${question.marks} marks`} size="small" variant="outlined" color="info" />
+                                )}
+                                {question.solution?.hasPodcast && (
+                                  <Chip 
+                                    icon={<Volume2 size={14} />}
+                                    label="Audio" 
+                                    size="small" 
+                                    color="success" 
+                                    variant="outlined"
+                                  />
+                                )}
                                 {question.isPredicted && (
                                   <Chip 
                                     label="🔮 PREDICTED" 
@@ -322,19 +355,69 @@ const QuestionManager: React.FC<QuestionManagerProps> = ({
 
                             <Divider sx={{ my: 2 }} />
 
-                            <Typography variant="subtitle2" color="primary" gutterBottom>
-                              Explanation:
-                            </Typography>
-                            <Typography variant="body2" paragraph>
-                              {question.explanation}
-                            </Typography>
+                            {question.explanation && (
+                              <>
+                                <Typography variant="subtitle2" color="primary" gutterBottom>
+                                  Explanation:
+                                </Typography>
+                                <Typography variant="body2" paragraph>
+                                  {question.explanation}
+                                </Typography>
+                              </>
+                            )}
 
-                            <Typography variant="subtitle2" color="secondary" gutterBottom>
-                              Detailed Solution:
-                            </Typography>
-                            <Typography variant="body2" sx={{ whiteSpace: 'pre-line' }}>
-                              {question.solution}
-                            </Typography>
+                            {question.solution && (
+                              <>
+                                <Typography variant="subtitle2" color="secondary" gutterBottom sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                                  <BookOpen size={16} />
+                                  Solution:
+                                  {question.solution.hasPodcast && (
+                                    <Chip 
+                                      icon={<Volume2 size={14} />} 
+                                      label="Audio Available" 
+                                      color="success" 
+                                      size="small"
+                                    />
+                                  )}
+                                </Typography>
+                                
+                                {question.solution.textSolution && (
+                                  <Typography variant="body2" sx={{ whiteSpace: 'pre-line', mb: 2 }}>
+                                    {question.solution.textSolution}
+                                  </Typography>
+                                )}
+
+                                {question.solution.hasPodcast && (
+                                  <Paper sx={{ p: 2, bgcolor: 'success.50', border: 1, borderColor: 'success.200' }}>
+                                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                                      <Volume2 size={20} color="#2e7d32" />
+                                      <Box sx={{ flexGrow: 1 }}>
+                                        <Typography variant="subtitle2" color="success.dark">
+                                          Audio Solution Available
+                                        </Typography>
+                                        <Typography variant="caption" color="text.secondary">
+                                          Duration: {Math.floor((question.solution.podcastDuration || 0) / 60)}:{((question.solution.podcastDuration || 0) % 60).toString().padStart(2, '0')}
+                                        </Typography>
+                                      </Box>
+                                      <Button size="small" startIcon={<Play />} variant="outlined" color="success">
+                                        Play
+                                      </Button>
+                                    </Box>
+                                  </Paper>
+                                )}
+                              </>
+                            )}
+
+                            {question.marks && (
+                              <Box sx={{ mt: 2 }}>
+                                <Chip 
+                                  label={`Total Marks: ${question.marks}`} 
+                                  variant="outlined" 
+                                  color="info"
+                                  size="small"
+                                />
+                              </Box>
+                            )}
                           </CardContent>
                         </Card>
                       </motion.div>
@@ -459,6 +542,18 @@ const QuestionManager: React.FC<QuestionManagerProps> = ({
                 inputProps={{ min: 1, max: 20 }}
               />
 
+              <TextField
+                label="Marks (Optional)"
+                type="number"
+                value={formData.marks || ''}
+                onChange={(e) => { 
+                  const value = e.target.value ? parseInt(e.target.value) : undefined;
+                  setFormData(prev => ({ ...prev, marks: value })); 
+                }}
+                inputProps={{ min: 1, max: 100 }}
+                placeholder="Total marks for this question"
+              />
+
               {/* Prediction Option */}
               <FormControlLabel
                 control={
@@ -539,45 +634,83 @@ const QuestionManager: React.FC<QuestionManagerProps> = ({
               />
             )}
 
-            {/* Explanation */}
+            {/* Explanation (Optional) */}
             {showMathEditor ? (
               <MathTextEditor
-                value={formData.explanation}
+                value={formData.explanation || ''}
                 onChange={(value) => { setFormData(prev => ({ ...prev, explanation: value })); }}
-                placeholder="Brief explanation with mathematical notation..."
-                label="Explanation (Math Mode)"
+                placeholder="Brief explanation with mathematical notation... (Optional)"
+                label="Explanation (Math Mode) - Optional"
               />
             ) : (
               <TextField
-                label="Explanation *"
+                label="Explanation (Optional)"
                 fullWidth
                 multiline
                 rows={3}
-                value={formData.explanation}
+                value={formData.explanation || ''}
                 onChange={(e) => { setFormData(prev => ({ ...prev, explanation: e.target.value })); }}
-                placeholder="Brief explanation of why this is the correct answer"
+                placeholder="Brief explanation of why this is the correct answer (optional)"
               />
             )}
 
-            {/* Detailed Solution */}
-            {showMathEditor ? (
-              <MathTextEditor
-                value={formData.solution}
-                onChange={(value) => { setFormData(prev => ({ ...prev, solution: value })); }}
-                placeholder="Step-by-step solution with mathematical notation..."
-                label="Detailed Solution (Math Mode)"
-              />
-            ) : (
-              <TextField
-                label="Detailed Solution *"
-                fullWidth
-                multiline
-                rows={5}
-                value={formData.solution}
-                onChange={(e) => { setFormData(prev => ({ ...prev, solution: e.target.value })); }}
-                placeholder="Step-by-step solution with working and reasoning..."
-              />
-            )}
+            {/* Enhanced Solution with Podcast */}
+            <Box>
+              <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1 }}>
+                <Typography variant="subtitle1">
+                  Solution (Optional)
+                </Typography>
+                <Button
+                  variant="outlined"
+                  startIcon={<Volume2 />}
+                  onClick={handleOpenPodcastGenerator}
+                  color="secondary"
+                  size="small"
+                >
+                  {formData.solution?.hasPodcast ? 'Edit Solution & Podcast' : 'Add Solution & Generate Podcast'}
+                </Button>
+              </Box>
+
+              {formData.solution ? (
+                <Paper sx={{ p: 2, bgcolor: 'grey.50' }}>
+                  <Stack spacing={2}>
+                    {formData.solution.textSolution && (
+                      <Box>
+                        <Typography variant="caption" color="text.secondary">
+                          Text Solution:
+                        </Typography>
+                        <Typography variant="body2">
+                          {formData.solution.textSolution.substring(0, 200)}
+                          {formData.solution.textSolution.length > 200 ? '...' : ''}
+                        </Typography>
+                      </Box>
+                    )}
+                    
+                    {formData.solution.hasPodcast && (
+                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                        <Chip 
+                          icon={<Mic size={16} />} 
+                          label="Audio Podcast Available" 
+                          color="success" 
+                          size="small"
+                        />
+                        <Chip 
+                          label={`${Math.floor((formData.solution.podcastDuration || 0) / 60)}:${((formData.solution.podcastDuration || 0) % 60).toString().padStart(2, '0')}`} 
+                          variant="outlined" 
+                          size="small"
+                        />
+                      </Box>
+                    )}
+                  </Stack>
+                </Paper>
+              ) : (
+                <Paper sx={{ p: 3, bgcolor: 'grey.50', textAlign: 'center' }}>
+                  <Typography variant="body2" color="text.secondary">
+                    No solution added yet. Click "Add Solution & Generate Podcast" to create enhanced solutions with audio explanations.
+                  </Typography>
+                </Paper>
+              )}
+            </Box>
           </Stack>
         </DialogContent>
         <DialogActions>
@@ -587,6 +720,15 @@ const QuestionManager: React.FC<QuestionManagerProps> = ({
           </Button>
         </DialogActions>
       </Dialog>
+
+      {/* Podcast Generator Dialog */}
+      <PodcastGenerator
+        open={showPodcastGenerator}
+        onClose={() => setShowPodcastGenerator(false)}
+        onSave={handleSaveSolution}
+        existingSolution={formData.solution}
+        questionText={formData.question}
+      />
     </Box>
   );
 };

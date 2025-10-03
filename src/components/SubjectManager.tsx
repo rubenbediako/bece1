@@ -96,6 +96,7 @@ const SubjectManager: React.FC<SubjectManagerProps> = ({
         name: subjectFormData.name,
         description: subjectFormData.description,
         topics: [], // Empty array since topics are now separate entities
+        sections: [], // Initialize empty sections array
         createdAt: now,
         updatedAt: now
       };

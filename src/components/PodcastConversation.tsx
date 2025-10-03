@@ -15,24 +15,24 @@ import {
 import { Play, Pause, RotateCcw, Volume2, User, GraduationCap } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
-interface Question {
-  id: string;
-  question: string;
-  correctAnswer: string;
-  explanation: string;
-  solution: string;
-  type: string;
-  options?: string[];
-}
-
 interface ConversationMessage {
   speaker: 'AMA' | 'DAS';
   message: string;
   timestamp: number;
 }
 
+interface QuestionForPodcast {
+  id: string;
+  question: string;
+  explanation: string;
+  correctAnswer: string;
+  type?: string;
+  options?: string[];
+  solution?: any;
+}
+
 interface PodcastConversationProps {
-  question: Question;
+  question: QuestionForPodcast;
   onClose: () => void;
 }
 
@@ -75,7 +75,7 @@ const PodcastConversation: React.FC<PodcastConversationProps> = ({ question, onC
       // Add explanation
       messages.push({
         speaker: 'DAS',
-        message: `Here's the explanation: ${question.explanation}`,
+        message: `Here's the explanation: ${question.explanation || 'No explanation provided for this question.'}`,
         timestamp: messages.length
       });
 

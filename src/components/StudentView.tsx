@@ -560,18 +560,55 @@ const StudentView: React.FC<StudentViewProps> = ({
               </Card>
               
               {/* Detailed Solution */}
-              <Card sx={{ mb: 3, bgcolor: 'warning.50', borderLeft: 4, borderColor: 'warning.main' }}>
-                <CardContent>
-                  <Typography variant="h6" gutterBottom color="warning.main" sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                    📚 Step-by-Step Solution
-                  </Typography>
-                  <Paper sx={{ p: 3, bgcolor: 'white', border: 1, borderColor: 'divider' }}>
-                    <Typography variant="body1" sx={{ whiteSpace: 'pre-line', lineHeight: 1.6 }}>
-                      {selectedQuestion.solution}
+              {selectedQuestion.solution && (
+                <Card sx={{ mb: 3, bgcolor: 'warning.50', borderLeft: 4, borderColor: 'warning.main' }}>
+                  <CardContent>
+                    <Typography variant="h6" gutterBottom color="warning.main" sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                      📚 Step-by-Step Solution
+                      {selectedQuestion.solution.hasPodcast && (
+                        <Chip 
+                          icon={<Play size={16} />}
+                          label="Audio Available" 
+                          color="success" 
+                          size="small"
+                        />
+                      )}
                     </Typography>
-                  </Paper>
-                </CardContent>
-              </Card>
+                    
+                    {selectedQuestion.solution.textSolution && (
+                      <Paper sx={{ p: 3, bgcolor: 'white', border: 1, borderColor: 'divider', mb: 2 }}>
+                        <Typography variant="body1" sx={{ whiteSpace: 'pre-line', lineHeight: 1.6 }}>
+                          {selectedQuestion.solution.textSolution}
+                        </Typography>
+                      </Paper>
+                    )}
+
+                    {selectedQuestion.solution.hasPodcast && (
+                      <Paper sx={{ p: 2, bgcolor: 'success.50', border: 1, borderColor: 'success.200' }}>
+                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                          <Play size={24} color="#2e7d32" />
+                          <Box sx={{ flexGrow: 1 }}>
+                            <Typography variant="subtitle2" color="success.dark">
+                              🎧 Audio Solution Podcast
+                            </Typography>
+                            <Typography variant="caption" color="text.secondary">
+                              Duration: {Math.floor((selectedQuestion.solution.podcastDuration || 0) / 60)}:{((selectedQuestion.solution.podcastDuration || 0) % 60).toString().padStart(2, '0')}
+                            </Typography>
+                          </Box>
+                          <Button 
+                            variant="contained" 
+                            color="success" 
+                            startIcon={<Play />}
+                            onClick={() => alert('🎧 Playing audio solution podcast...')}
+                          >
+                            Play Podcast
+                          </Button>
+                        </Box>
+                      </Paper>
+                    )}
+                  </CardContent>
+                </Card>
+              )}
 
               {/* Study Tip */}
               <Card sx={{ bgcolor: 'primary.50', borderLeft: 4, borderColor: 'primary.main' }}>
@@ -607,7 +644,15 @@ const StudentView: React.FC<StudentViewProps> = ({
       {/* Podcast Conversation */}
       {showPodcast && (
         <PodcastConversation 
-          question={selectedQuestion}
+          question={{
+            id: selectedQuestion.id,
+            question: selectedQuestion.question,
+            explanation: selectedQuestion.explanation || 'No explanation provided.',
+            correctAnswer: selectedQuestion.correctAnswer,
+            type: selectedQuestion.type,
+            options: selectedQuestion.options,
+            solution: selectedQuestion.solution
+          }}
           onClose={handleClosePodcast}
         />
       )}

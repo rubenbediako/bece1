@@ -3,21 +3,52 @@ node_modules
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
+package-lock.json
 
 # Development files
 .env.local
 .env.development.local
 .env.test.local
 .env.production.local
+dev.log
 
 # Build artifacts
 .next
 out
 build
+dist
 
 # IDE files
 .vscode
 .idea
+*.swp
+*.swo
+
+# Documentation (not needed for deployment)
+README*.md
+ADMIN_*.md
+DEPLOYMENT*.md
+PRODUCTION*.md
+FINAL_STATUS.md
+VERCEL_*.md
+MATHEMATICS_CURRICULUM.md
+MULTI_CHANNEL_CODE_SYSTEM.md
+WHATSAPP-INTEGRATION.md
+REPOSITORY_STATUS.md
+
+# Scripts and config files not needed in production
+deploy.sh
+build-production.sh
+vercel-simple.json
+
+# Git files
+.git
+.gitignore
+
+# Backup files
+*.bak
+*.backup
+*.tmp
 *.swp
 *.swo
 
