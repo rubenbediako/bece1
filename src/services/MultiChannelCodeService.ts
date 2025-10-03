@@ -44,7 +44,7 @@ class MultiChannelCodeService {
   }
 
   // Send code via WhatsApp
-  async sendViaWhatsApp(phoneNumber: string, message: string): Promise<boolean> {
+  sendViaWhatsApp(phoneNumber: string, message: string): Promise<boolean> {
     try {
       const whatsappUrl = `https://wa.me/${phoneNumber}?text=${encodeURIComponent(message)}`;
       
@@ -52,15 +52,15 @@ class MultiChannelCodeService {
         window.open(whatsappUrl, '_blank');
       }
       
-      return true;
+      return Promise.resolve(true);
     } catch (error) {
       console.error('WhatsApp send error:', error);
-      return false;
+      return Promise.resolve(false);
     }
   }
 
   // Send code via SMS
-  async sendViaSMS(phoneNumber: string, message: string): Promise<boolean> {
+  sendViaSMS(phoneNumber: string, message: string): Promise<boolean> {
     try {
       // For web browsers, use the SMS URI scheme
       const smsUrl = `sms:+${phoneNumber}?body=${encodeURIComponent(message)}`;
@@ -69,10 +69,10 @@ class MultiChannelCodeService {
         window.open(smsUrl, '_blank');
       }
       
-      return true;
+      return Promise.resolve(true);
     } catch (error) {
       console.error('SMS send error:', error);
-      return false;
+      return Promise.resolve(false);
     }
   }
 

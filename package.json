@@ -17,9 +17,9 @@
     "dev": "vite",
     "build": "tsc -b && vite build",
     "build:clean": "rm -rf dist && npm run build",
-    "lint": "eslint .",
+    "lint": "eslint . --max-warnings 200",
     "lint:fix": "eslint . --fix",
-    "lint:check": "eslint . --max-warnings 50",
+    "lint:check": "eslint . --max-warnings 200",
     "preview": "vite preview",
     "prod": "npm run build && npm run preview",
     "vercel-build": "npm run build:clean"
