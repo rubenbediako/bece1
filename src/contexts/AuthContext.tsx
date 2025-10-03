@@ -48,10 +48,24 @@ interface RegisterData {
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 // Production users will be managed through registration
-const initialUsers: User[] = [];
+const initialUsers: User[] = [
+  {
+    id: 'admin-default',
+    username: 'dasexams',
+    email: 'dasexams@gmail.com',
+    role: 'admin',
+    fullName: 'DAS Exams Admin',
+    createdAt: new Date().toISOString()
+  }
+];
 
-// Production credentials will be managed through secure authentication
-const userCredentials: { email: string; password: string }[] = [];
+// Production credentials - only default admin
+const userCredentials: { email: string; password: string }[] = [
+  {
+    email: 'dasexams@gmail.com',
+    password: '123456'
+  }
+];
 
 // Access code management - starts with empty, admin generates as needed
 let currentAccessCode = '';
@@ -105,6 +119,11 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         currentAccessCodeWithExpiry = null;
       }
     }
+
+    // Generate initial access code if none exists
+    if (!currentAccessCode) {
+      generateAccessCode();
+    }
   }, []);
 
   // Save auto-generation preference when it changes
@@ -122,7 +141,10 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     );
 
     if (credentialMatch) {
-      const userData = users.find(u => u.email === email);
+      // Check in both dynamic users and initial users
+      const userData = users.find(u => u.email === email) || 
+                      initialUsers.find(u => u.email === email);
+      
       if (userData) {
         // If user is a student, require valid access code
         if (userData.role === 'student') {
@@ -229,7 +251,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   };
 
   const hasUsers = (): boolean => {
-    return users.length > 0;
+    return users.length > 0 || initialUsers.length > 0;
   };
 
   const generateAccessCode = (): string => {

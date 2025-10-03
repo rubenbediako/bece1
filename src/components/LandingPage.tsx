@@ -25,9 +25,10 @@ import {
 
 interface LandingPageProps {
   onGetStarted: () => void;
+  onAdminLogin?: () => void;
 }
 
-const LandingPage: React.FC<LandingPageProps> = ({ onGetStarted }) => {
+const LandingPage: React.FC<LandingPageProps> = ({ onGetStarted, onAdminLogin }) => {
   const features = [
     {
       icon: Target,
@@ -117,22 +118,55 @@ const LandingPage: React.FC<LandingPageProps> = ({ onGetStarted }) => {
                 Prepare for BECE 2026 with AI-powered topic predictions, interactive solutions, 
                 and podcast-style explanations from AMA (student) and DAS (teacher).
               </Typography>
-              <Button
-                variant="contained"
-                size="large"
-                onClick={onGetStarted}
-                sx={{
-                  bgcolor: 'secondary.main',
-                  color: 'white',
-                  px: 4,
-                  py: 2,
-                  fontSize: '1.2rem',
-                  '&:hover': { bgcolor: 'secondary.dark' }
-                }}
-                endIcon={<ChevronRight />}
-              >
-                Get Started Now
-              </Button>
+              
+              {/* Login Options */}
+              <Stack direction={{ xs: 'column', sm: 'row' }} spacing={3} sx={{ mt: 4 }}>
+                <Button
+                  variant="contained"
+                  size="large"
+                  onClick={onGetStarted}
+                  sx={{
+                    bgcolor: 'secondary.main',
+                    color: 'white',
+                    px: 4,
+                    py: 2,
+                    fontSize: '1.2rem',
+                    flex: 1,
+                    '&:hover': { bgcolor: 'secondary.dark' }
+                  }}
+                  endIcon={<ChevronRight />}
+                >
+                  Student Login
+                </Button>
+                
+                {onAdminLogin && (
+                  <Button
+                    variant="outlined"
+                    size="large"
+                    onClick={onAdminLogin}
+                    sx={{
+                      borderColor: 'primary.main',
+                      color: 'primary.main',
+                      px: 4,
+                      py: 2,
+                      fontSize: '1.2rem',
+                      flex: 1,
+                      '&:hover': { 
+                        bgcolor: 'primary.main',
+                        color: 'white' 
+                      }
+                    }}
+                    endIcon={<ChevronRight />}
+                  >
+                    Admin Login
+                  </Button>
+                )}
+              </Stack>
+              
+              <Typography variant="body2" color="text.secondary" sx={{ mt: 2, textAlign: 'center' }}>
+                Students: Register and access BECE 2026 predictions<br />
+                Administrators: Manage platform and generate access codes
+              </Typography>
             </Box>
           </motion.div>
         </Container>

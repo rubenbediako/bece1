@@ -45,11 +45,16 @@ const theme = createTheme({
 export default function App() {
   const { isAuthenticated, isAdmin, hasUsers, createInitialAdmin } = useAuth();
   const [currentTab, setCurrentTab] = useState(0);
-  const [showLanding, setShowLanding] = useState(true);
+  const [showStudentAuth, setShowStudentAuth] = useState(false);
+  const [showAdminAuth, setShowAdminAuth] = useState(false);
   const [subjects, setSubjects] = useState<Subject[]>(beceSubjects);
   const [topics, setTopics] = useState<Topic[]>(beceTopics);
   const [questions, setQuestions] = useState<Question[]>(beceQuestions);
   const [predictedTopics, setPredictedTopics] = useState<PredictedTopic[]>(activePredictions);
+
+  const handleTabChange = (_event: React.SyntheticEvent, newValue: number) => {
+    setCurrentTab(newValue);
+  };
 
   // Show initial setup if no users exist
   if (!hasUsers()) {
@@ -61,37 +66,30 @@ export default function App() {
     );
   }
 
-  // Show landing page if not authenticated and landing is enabled
-  if (!isAuthenticated && showLanding) {
+  // Show authentication page when requested
+  if ((showStudentAuth || showAdminAuth) && !isAuthenticated) {
     return (
       <ThemeProvider theme={theme}>
         <CssBaseline />
-        <LandingPage onGetStarted={() => { setShowLanding(false); }} />
+        <AuthPage 
+          adminMode={showAdminAuth}
+          onBack={() => {
+            setShowStudentAuth(false);
+            setShowAdminAuth(false);
+          }}
+        />
       </ThemeProvider>
     );
   }
 
-  // If not authenticated, show login page
-  if (!isAuthenticated) {
+  // If authenticated as admin, show admin dashboard
+  if (isAuthenticated && isAdmin) {
     return (
       <ThemeProvider theme={theme}>
         <CssBaseline />
-        <AuthPage />
-      </ThemeProvider>
-    );
-  }
-
-  const handleTabChange = (_event: React.SyntheticEvent, newValue: number) => {
-    setCurrentTab(newValue);
-  };
-
-  return (
-    <ThemeProvider theme={theme}>
-      <CssBaseline />
-      <Container maxWidth="xl" sx={{ py: 2 }}>
-        <AppHeader />
-        
-        {isAdmin ? (
+        <Container maxWidth="xl" sx={{ py: 2 }}>
+          <AppHeader />
+          
           <Box sx={{ width: '100%' }}>
             <Box sx={{ borderBottom: 1, borderColor: 'divider', mb: 3 }}>
               <Tabs value={currentTab} onChange={handleTabChange} aria-label="admin tabs">
@@ -152,41 +150,89 @@ export default function App() {
               )}
             </motion.div>
           </Box>
-        ) : (
+        </Container>
+        
+        {/* Floating WhatsApp Button */}
+        <Tooltip title="WhatsApp: 054045614" placement="left">
+          <Fab
+            sx={{
+              position: 'fixed',
+              bottom: 20,
+              right: 20,
+              bgcolor: '#25D366',
+              color: 'white',
+              zIndex: 1000,
+              boxShadow: '0 4px 20px rgba(37, 211, 102, 0.4)',
+              '&:hover': {
+                bgcolor: '#128C7E',
+                transform: 'scale(1.1)',
+                transition: 'all 0.3s ease'
+              }
+            }}
+            href="https://wa.me/233540456149?text=Hi! I need help with BECE 2026 Prediction Platform"
+            target="_blank"
+            rel="noopener noreferrer"
+            component="a"
+          >
+            💬
+          </Fab>
+        </Tooltip>
+      </ThemeProvider>
+    );
+  }
+
+  // If authenticated as student, show student view
+  if (isAuthenticated && !isAdmin) {
+    return (
+      <ThemeProvider theme={theme}>
+        <CssBaseline />
+        <Container maxWidth="xl" sx={{ py: 2 }}>
+          <AppHeader />
           <StudentView
             subjects={subjects}
             topics={topics}
             questions={questions}
             predictedTopics={predictedTopics}
           />
-        )}
-      </Container>
-      
-      {/* Floating WhatsApp Button */}
-      <Tooltip title="WhatsApp: 054045614" placement="left">
-        <Fab
-          sx={{
-            position: 'fixed',
-            bottom: 20,
-            right: 20,
-            bgcolor: '#25D366',
-            color: 'white',
-            zIndex: 1000,
-            boxShadow: '0 4px 20px rgba(37, 211, 102, 0.4)',
-            '&:hover': {
-              bgcolor: '#128C7E',
-              transform: 'scale(1.1)',
-              transition: 'all 0.3s ease'
-            }
-          }}
-          href="https://wa.me/233540456149?text=Hi! I need help with BECE 2026 Prediction Platform"
-          target="_blank"
-          rel="noopener noreferrer"
-          component="a"
-        >
-          💬
-        </Fab>
-      </Tooltip>
+        </Container>
+        
+        {/* Floating WhatsApp Button */}
+        <Tooltip title="WhatsApp: 054045614" placement="left">
+          <Fab
+            sx={{
+              position: 'fixed',
+              bottom: 20,
+              right: 20,
+              bgcolor: '#25D366',
+              color: 'white',
+              zIndex: 1000,
+              boxShadow: '0 4px 20px rgba(37, 211, 102, 0.4)',
+              '&:hover': {
+                bgcolor: '#128C7E',
+                transform: 'scale(1.1)',
+                transition: 'all 0.3s ease'
+              }
+            }}
+            href="https://wa.me/233540456149?text=Hi! I need help with BECE 2026 Prediction Platform"
+            target="_blank"
+            rel="noopener noreferrer"
+            component="a"
+          >
+            💬
+          </Fab>
+        </Tooltip>
+      </ThemeProvider>
+    );
+  }
+
+  // Default: Always show landing page with both login options
+  return (
+    <ThemeProvider theme={theme}>
+      <CssBaseline />
+      <LandingPage 
+        onGetStarted={() => setShowStudentAuth(true)}
+        onAdminLogin={() => setShowAdminAuth(true)}
+      />
     </ThemeProvider>
   );
 }

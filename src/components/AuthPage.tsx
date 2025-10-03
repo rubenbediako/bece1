@@ -34,9 +34,14 @@ const TabPanel: React.FC<TabPanelProps> = ({ children, value, index }) => {
   );
 };
 
-const AuthPage: React.FC = () => {
+interface AuthPageProps {
+  adminMode?: boolean;
+  onBack?: () => void;
+}
+
+const AuthPage: React.FC<AuthPageProps> = ({ adminMode = false, onBack }) => {
   const { login, register } = useAuth();
-  const [tabValue, setTabValue] = useState(0);
+  const [tabValue, setTabValue] = useState(adminMode ? 0 : 0); // Always start with login for both
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
@@ -130,23 +135,7 @@ const AuthPage: React.FC = () => {
     }
   };
 
-  const fillDemoCredentials = (role: 'admin' | 'student') => {
-    if (role === 'admin') {
-      setLoginForm({
-        email: 'admin@bece.edu',
-        password: 'admin123',
-        accessCode: '',
-        userType: 'admin'
-      });
-    } else {
-      setLoginForm({
-        email: 'student@bece.edu',
-        password: 'student123',
-        accessCode: 'BECE2026',
-        userType: 'student'
-      });
-    }
-  };
+
 
   return (
     <Container maxWidth="sm" sx={{ py: 8 }}>
@@ -158,44 +147,38 @@ const AuthPage: React.FC = () => {
         <Paper elevation={8} sx={{ overflow: 'hidden' }}>
           {/* Header */}
           <Box sx={{ 
-            background: 'linear-gradient(135deg, #1976d2 0%, #42a5f5 100%)',
+            background: adminMode 
+              ? 'linear-gradient(135deg, #d32f2f 0%, #f44336 100%)'
+              : 'linear-gradient(135deg, #1976d2 0%, #42a5f5 100%)',
             color: 'white',
             p: 4,
-            textAlign: 'center'
+            textAlign: 'center',
+            position: 'relative'
           }}>
+            {onBack && (
+              <Button
+                onClick={onBack}
+                sx={{ 
+                  position: 'absolute', 
+                  left: 16, 
+                  top: 16,
+                  color: 'white',
+                  '&:hover': { bgcolor: 'rgba(255,255,255,0.1)' }
+                }}
+              >
+                ← Back
+              </Button>
+            )}
             <BookOpen size={48} style={{ marginBottom: 16 }} />
             <Typography variant="h4" component="h1" gutterBottom>
-              BECE 2026 Prediction
+              {adminMode ? 'Admin Portal' : 'BECE 2026 Prediction'}
             </Typography>
             <Typography variant="subtitle1">
-              Your Gateway to BECE Success
+              {adminMode ? 'Platform Administration' : 'Your Gateway to BECE Success'}
             </Typography>
           </Box>
 
-          {/* Demo Credentials Helper */}
-          <Box sx={{ p: 3, bgcolor: 'grey.50', borderBottom: 1, borderColor: 'divider' }}>
-            <Typography variant="subtitle2" gutterBottom color="text.secondary">
-              Demo Credentials:
-            </Typography>
-            <Box sx={{ display: 'flex', gap: 2, flexWrap: 'wrap' }}>
-              <Button
-                size="small"
-                variant="outlined"
-                onClick={() => { fillDemoCredentials('admin'); }}
-                startIcon={<LogIn size={16} />}
-              >
-                Admin Demo
-              </Button>
-              <Button
-                size="small"
-                variant="outlined"
-                onClick={() => { fillDemoCredentials('student'); }}
-                startIcon={<LogIn size={16} />}
-              >
-                Student Demo
-              </Button>
-            </Box>
-          </Box>
+
 
           {/* WhatsApp Contact for Access Code */}
           <Box sx={{ p: 3, bgcolor: 'rgba(37, 211, 102, 0.1)', borderBottom: 1, borderColor: 'rgba(37, 211, 102, 0.3)' }}>
