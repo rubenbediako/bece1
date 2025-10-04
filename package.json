@@ -35,6 +35,7 @@
     "@mui/lab": "^7.0.0",
     "@mui/material": "^7.3.3",
     "@mui/system": "^7.3.3",
+    "@vercel/kv": "^3.0.0",
     "axios": "^1.12.2",
     "framer-motion": "^12.23.22",
     "katex": "^0.16.22",

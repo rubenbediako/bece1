@@ -32,6 +32,7 @@ import {
 } from '@mui/icons-material';
 import type { Question, AIAnswer, PodcastConversation, PodcastDialogue, Subject } from '../types';
 import { AIAnswerService } from '../services/AIAnswerService';
+import { aiAnswerAPI, podcastAPI } from '../api/database';
 
 interface Props {
   question: Question;
@@ -76,6 +77,14 @@ export const AIQuestionSolutionDialog: React.FC<Props> = ({ question, subject, o
 
     setIsGenerating(true);
     try {
+      // First check if we already have a cached AI answer
+      const cachedAnswer = await aiAnswerAPI.get(question.id);
+      if (cachedAnswer) {
+        setAiAnswer(cachedAnswer);
+        return;
+      }
+
+      // Generate new AI answer
       const aiAnswerRequest = {
         question: question.question,
         subject: subject.id as 'social-studies' | 'rme' | 'english',
@@ -86,12 +95,15 @@ export const AIQuestionSolutionDialog: React.FC<Props> = ({ question, subject, o
 
       const generatedAnswer = await aiService.generateAnswer(aiAnswerRequest);
       setAiAnswer(generatedAnswer);
+      
+      // Save to database for future use
+      await aiAnswerAPI.save(question.id, generatedAnswer);
     } catch (error) {
       console.error('Error generating AI answer:', error);
     } finally {
       setIsGenerating(false);
     }
-  }, [isEligibleSubject, question.question, question.difficulty, subject.id, subject.description, questionMarks, aiService]);
+  }, [isEligibleSubject, question.id, question.question, question.difficulty, subject.id, subject.description, questionMarks, aiService]);
 
   useEffect(() => {
     if (isEligibleSubject && !aiAnswer) {
@@ -118,8 +130,19 @@ export const AIQuestionSolutionDialog: React.FC<Props> = ({ question, subject, o
 
     setIsGeneratingPodcast(true);
     try {
+      // Check if we already have a cached podcast
+      const cachedPodcast = await podcastAPI.get(question.id);
+      if (cachedPodcast) {
+        setPodcastConversation(cachedPodcast);
+        return;
+      }
+
+      // Generate new podcast conversation
       const conversation = await aiService.generatePodcastConversation(aiAnswer, question.question);
       setPodcastConversation(conversation);
+      
+      // Save to database for future use
+      await podcastAPI.save(question.id, conversation);
     } catch (error) {
       console.error('Error generating podcast conversation:', error);
     } finally {

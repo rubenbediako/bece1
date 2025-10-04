@@ -178,3 +178,63 @@ export interface AnswerTemplate {
   };
   guidelines: string[];
 }
+
+// User Management Types
+export interface User {
+  id: string;
+  email: string;
+  name: string;
+  role: 'student' | 'teacher' | 'admin';
+  school?: string;
+  grade?: string;
+  subjects?: string[];
+  createdAt: string;
+  updatedAt: string;
+  lastLoginAt?: string;
+  preferences?: {
+    theme: 'light' | 'dark';
+    notifications: boolean;
+    language: 'en' | 'tw';
+  };
+}
+
+export interface StudentProgress {
+  userId: string;
+  subjectId: string;
+  completedQuestions: string[];
+  correctAnswers: number;
+  totalAttempts: number;
+  averageScore: number;
+  timeSpent: number; // in minutes
+  lastStudiedAt: string;
+  weakAreas: string[];
+  strongAreas: string[];
+}
+
+export interface UserSession {
+  id: string;
+  userId: string;
+  accessCode?: string;
+  expiresAt: string;
+  createdAt: string;
+  isActive: boolean;
+}
+
+// Analytics and Statistics Types
+export interface QuestionStats {
+  questionId: string;
+  views: number;
+  attempts: number;
+  correctAttempts: number;
+  averageTime: number;
+  difficulty: number; // calculated based on success rate
+}
+
+export interface SubjectStats {
+  subjectId: string;
+  totalQuestions: number;
+  aiGenerations: number;
+  podcastGenerations: number;
+  activeStudents: number;
+  averagePerformance: number;
+}
