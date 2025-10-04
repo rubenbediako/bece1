@@ -97,7 +97,9 @@ export interface PredictedTopic {
   probability: number;
   reasoning: string;
   isActive: boolean;
+  examDate?: string;
   createdAt: string;
+  updatedAt?: string;
 }
 
 // AI Answer Generation Types

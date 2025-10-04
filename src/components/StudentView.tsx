@@ -385,71 +385,182 @@ const StudentView: React.FC<StudentViewProps> = ({
             No questions available for this topic yet.
           </Typography>
         ) : (
-          <Grid container spacing={3}>
-            {topicQuestions.map((question, index) => (
-              <Grid size={{ xs: 12 }} key={question.id}>
-                <motion.div
-                  whileHover={{ scale: 1.01 }}
-                  whileTap={{ scale: 0.99 }}
-                >
-                  <Card 
-                    sx={{ 
-                      cursor: 'pointer',
-                      transition: 'all 0.3s ease',
-                      '&:hover': {
-                        boxShadow: 4,
-                        bgcolor: 'info.main',
-                        color: 'white',
-                        '& .MuiChip-root': {
-                          bgcolor: 'white',
-                          color: 'info.main'
-                        }
-                      }
-                    }}
-                    onClick={() => { setSelectedQuestion(question); }}
-                  >
-                    <CardContent>
-                      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 2 }}>
-                        <Typography variant="h6">
-                          Question {index + 1}
-                        </Typography>
-                        <Box sx={{ display: 'flex', gap: 1 }}>
-                          <Chip 
-                            label={question.difficulty}
-                            color={
-                              question.difficulty === 'hard' ? 'error' : 
-                              question.difficulty === 'medium' ? 'warning' : 'success'
+          <>
+            {/* Essay Questions Section - Highlighted for AI Generation */}
+            {topicQuestions.filter(q => q.type === 'essay' && ['social-studies', 'rme', 'english'].includes(q.subjectId)).length > 0 && (
+              <Box sx={{ mb: 4 }}>
+                <Typography variant="h5" gutterBottom sx={{ color: 'primary.main', display: 'flex', alignItems: 'center', gap: 1 }}>
+                  🤖 AI Essay Questions
+                  <Chip label="Generate Essays & Podcasts" color="primary" size="small" />
+                </Typography>
+                <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
+                  Click on any essay question below to generate AI-powered comprehensive answers with interactive podcasts!
+                </Typography>
+                <Grid container spacing={3}>
+                  {topicQuestions
+                    .filter(q => q.type === 'essay' && ['social-studies', 'rme', 'english'].includes(q.subjectId))
+                    .map((question) => (
+                    <Grid size={{ xs: 12 }} key={question.id}>
+                      <motion.div
+                        whileHover={{ scale: 1.01 }}
+                        whileTap={{ scale: 0.99 }}
+                      >
+                        <Card 
+                          sx={{ 
+                            cursor: 'pointer',
+                            transition: 'all 0.3s ease',
+                            border: '2px solid',
+                            borderColor: 'primary.main',
+                            background: 'linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%)',
+                            '&:hover': {
+                              boxShadow: 8,
+                              bgcolor: 'primary.main',
+                              color: 'white',
+                              '& .MuiChip-root': {
+                                bgcolor: 'white',
+                                color: 'primary.main'
+                              }
                             }
-                            size="small"
-                          />
-                          <Chip 
-                            label={`${question.points} pts`}
-                            variant="outlined"
-                            size="small"
-                          />
-                        </Box>
-                      </Box>
-                      
-                      <Typography variant="body1" sx={{ mb: 2 }}>
-                        {question.question}
-                      </Typography>
-                      
-                      {question.type === 'multiple-choice' && question.options && (
-                        <Box>
-                          <Typography variant="subtitle2" sx={{ mb: 1 }}>Options:</Typography>
-                          {question.options.map((option, optIndex) => (
-                            <Typography key={optIndex} variant="body2" sx={{ ml: 2 }}>
-                              {String.fromCharCode(65 + optIndex)}. {option}
+                          }}
+                          onClick={() => { setSelectedQuestion(question); }}
+                        >
+                          <CardContent>
+                            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 2 }}>
+                              <Typography variant="h6" sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                                🤖 Essay Question
+                                <Chip 
+                                  label="AI Powered"
+                                  color="primary"
+                                  size="small"
+                                  sx={{ fontWeight: 'bold' }}
+                                />
+                              </Typography>
+                              <Box sx={{ display: 'flex', gap: 1 }}>
+                                <Chip 
+                                  label={question.difficulty}
+                                  color={
+                                    question.difficulty === 'hard' ? 'error' : 
+                                    question.difficulty === 'medium' ? 'warning' : 'success'
+                                  }
+                                  size="small"
+                                />
+                                <Chip 
+                                  label={`${question.marks || question.points} marks`}
+                                  variant="outlined"
+                                  size="small"
+                                />
+                              </Box>
+                            </Box>
+                            
+                            <Typography variant="body1" sx={{ mb: 2, fontWeight: 500 }}>
+                              {question.question}
                             </Typography>
-                          ))}
-                        </Box>
-                      )}
-                    </CardContent>
-                  </Card>
-                </motion.div>
-              </Grid>
-            ))}
-          </Grid>
+
+                            <Box sx={{ 
+                              bgcolor: 'rgba(25, 118, 210, 0.1)', 
+                              p: 2, 
+                              borderRadius: 1, 
+                              border: '1px solid rgba(25, 118, 210, 0.2)' 
+                            }}>
+                              <Typography variant="subtitle2" color="primary.main" gutterBottom sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                                ✨ AI Features Available:
+                              </Typography>
+                              <Typography variant="body2" sx={{ mb: 1 }}>
+                                • Generate comprehensive {(question.marks ?? question.points ?? 10) >= 12 ? '6-paragraph' : 'structured'} essay answer
+                              </Typography>
+                              <Typography variant="body2" sx={{ mb: 1 }}>
+                                • Interactive podcast conversation between Student Serwaa and Teacher Das
+                              </Typography>
+                              <Typography variant="body2">
+                                • Step-by-step explanation and study tips
+                              </Typography>
+                            </Box>
+                          </CardContent>
+                        </Card>
+                      </motion.div>
+                    </Grid>
+                  ))}
+                </Grid>
+              </Box>
+            )}
+
+            {/* Other Questions Section */}
+            {topicQuestions.filter(q => !(q.type === 'essay' && ['social-studies', 'rme', 'english'].includes(q.subjectId))).length > 0 && (
+              <Box>
+                <Typography variant="h5" gutterBottom sx={{ color: 'info.main', display: 'flex', alignItems: 'center', gap: 1 }}>
+                  📝 Practice Questions
+                  <Chip label="Regular Study Questions" color="info" size="small" variant="outlined" />
+                </Typography>
+                <Grid container spacing={3}>
+                  {topicQuestions
+                    .filter(q => !(q.type === 'essay' && ['social-studies', 'rme', 'english'].includes(q.subjectId)))
+                    .map((question) => (
+                    <Grid size={{ xs: 12 }} key={question.id}>
+                      <motion.div
+                        whileHover={{ scale: 1.01 }}
+                        whileTap={{ scale: 0.99 }}
+                      >
+                        <Card 
+                          sx={{ 
+                            cursor: 'pointer',
+                            transition: 'all 0.3s ease',
+                            '&:hover': {
+                              boxShadow: 4,
+                              bgcolor: 'info.main',
+                              color: 'white',
+                              '& .MuiChip-root': {
+                                bgcolor: 'white',
+                                color: 'info.main'
+                              }
+                            }
+                          }}
+                          onClick={() => { setSelectedQuestion(question); }}
+                        >
+                          <CardContent>
+                            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 2 }}>
+                              <Typography variant="h6">
+                                Question {topicQuestions.filter(q => !(q.type === 'essay' && ['social-studies', 'rme', 'english'].includes(q.subjectId))).findIndex(q => q.id === question.id) + 1}
+                              </Typography>
+                              <Box sx={{ display: 'flex', gap: 1 }}>
+                                <Chip 
+                                  label={question.difficulty}
+                                  color={
+                                    question.difficulty === 'hard' ? 'error' : 
+                                    question.difficulty === 'medium' ? 'warning' : 'success'
+                                  }
+                                  size="small"
+                                />
+                                <Chip 
+                                  label={`${question.points} pts`}
+                                  variant="outlined"
+                                  size="small"
+                                />
+                              </Box>
+                            </Box>
+                            
+                            <Typography variant="body1" sx={{ mb: 2 }}>
+                              {question.question}
+                            </Typography>
+                            
+                            {question.type === 'multiple-choice' && question.options && (
+                              <Box>
+                                <Typography variant="subtitle2" sx={{ mb: 1 }}>Options:</Typography>
+                                {question.options.map((option, optIndex) => (
+                                  <Typography key={optIndex} variant="body2" sx={{ ml: 2 }}>
+                                    {String.fromCharCode(65 + optIndex)}. {option}
+                                  </Typography>
+                                ))}
+                              </Box>
+                            )}
+                          </CardContent>
+                        </Card>
+                      </motion.div>
+                    </Grid>
+                  ))}
+                </Grid>
+              </Box>
+            )}
+          </>
         )}
       </Box>
     );
