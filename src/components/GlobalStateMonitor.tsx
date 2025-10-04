@@ -29,10 +29,12 @@ import {
   Info,
   Download,
   Verified,
-  BugReport
+  BugReport,
+  Warning
 } from '@mui/icons-material';
 import { useGlobalState } from '../contexts/GlobalStateContext';
 import DatabaseDiagnostics from './DatabaseDiagnostics';
+import DatabaseService from '../services/DatabaseService';
 
 const GlobalStateMonitor: React.FC = () => {
   const {
@@ -53,6 +55,9 @@ const GlobalStateMonitor: React.FC = () => {
   const [integrityResult, setIntegrityResult] = useState<any>(null);
   const [isExporting, setIsExporting] = useState(false);
   const [isVerifying, setIsVerifying] = useState(false);
+
+  const dbService = DatabaseService.getInstance();
+  const storageStatus = dbService.getStorageStatus();
 
   const getSyncStatusColor = () => {
     if (!isOnline) return 'default';
@@ -158,7 +163,7 @@ const GlobalStateMonitor: React.FC = () => {
   return (
     <>
       <Box sx={{ position: 'fixed', top: 16, right: 16, zIndex: 1000 }}>
-        <Tooltip title={`Click for details • Last sync: ${lastSync ? new Date(lastSync).toLocaleTimeString() : 'Never'}`}>
+        <Tooltip title={`Storage: ${storageStatus.type === 'vercel-kv' ? 'Global sync' : storageStatus.type === 'localStorage' ? 'Local only (fallback)' : 'Error'} • Last sync: ${lastSync ? new Date(lastSync).toLocaleTimeString() : 'Never'}`}>
           <Chip
             icon={getSyncStatusIcon()}
             label={getSyncStatusText()}
@@ -167,7 +172,11 @@ const GlobalStateMonitor: React.FC = () => {
             onClick={handleShowDetails}
             sx={{ 
               cursor: 'pointer',
-              '&:hover': { boxShadow: 2 }
+              '&:hover': { boxShadow: 2 },
+              ...(storageStatus.type === 'localStorage' && {
+                borderColor: 'orange',
+                borderWidth: 2
+              })
             }}
           />
         </Tooltip>
@@ -178,6 +187,15 @@ const GlobalStateMonitor: React.FC = () => {
             color="warning"
             size="small"
             sx={{ ml: 1 }}
+          />
+        )}
+        {storageStatus.type === 'localStorage' && (
+          <Chip
+            icon={<Warning />}
+            label="Local Only"
+            color="warning"
+            size="small"
+            sx={{ ml: 1, mt: 1, display: 'block' }}
           />
         )}
       </Box>
@@ -204,6 +222,32 @@ const GlobalStateMonitor: React.FC = () => {
 
           {globalStateInfo && (
             <Grid container spacing={2}>
+              {/* Storage Status */}
+              <Grid size={{ xs: 12 }}>
+                <Card>
+                  <CardContent>
+                    <Typography variant="h6" gutterBottom sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                      {storageStatus.type === 'vercel-kv' ? <Storage color="success" /> : 
+                       storageStatus.type === 'localStorage' ? <Warning color="warning" /> : 
+                       <Error color="error" />}
+                      Storage Status
+                    </Typography>
+                    <Typography 
+                      color={storageStatus.type === 'vercel-kv' ? 'success.main' : 
+                             storageStatus.type === 'localStorage' ? 'warning.main' : 'error.main'}
+                    >
+                      {storageStatus.message}
+                    </Typography>
+                    {storageStatus.type === 'localStorage' && (
+                      <Alert severity="warning" sx={{ mt: 2 }}>
+                        Data is only saved locally in your browser. To enable global sync across all devices, 
+                        please configure Vercel KV database in your deployment.
+                      </Alert>
+                    )}
+                  </CardContent>
+                </Card>
+              </Grid>
+
               {/* Connection Status */}
               <Grid size={{ xs: 12, md: 6 }}>
                 <Card>

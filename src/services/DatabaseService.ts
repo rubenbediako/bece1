@@ -6,6 +6,7 @@ export class DatabaseService {
   private readonly prefix = 'bece_2026_';
   private isInitialized = false;
   private initializationError: Error | null = null;
+  private useFallbackStorage = false;
 
   private constructor() {
     this.initializeDatabase();
@@ -16,6 +17,25 @@ export class DatabaseService {
       DatabaseService.instance = new DatabaseService();
     }
     return DatabaseService.instance;
+  }
+
+  // Fallback storage using localStorage for development/testing
+  private setLocalStorage(key: string, value: any): void {
+    try {
+      localStorage.setItem(key, JSON.stringify(value));
+    } catch (error) {
+      console.warn('Failed to save to localStorage:', error);
+    }
+  }
+
+  private getLocalStorage<T>(key: string): T | null {
+    try {
+      const item = localStorage.getItem(key);
+      return item ? JSON.parse(item) : null;
+    } catch (error) {
+      console.warn('Failed to read from localStorage:', error);
+      return null;
+    }
   }
 
   // Check if database is properly configured
@@ -53,24 +73,47 @@ export class DatabaseService {
       console.log('✅ Database initialized successfully');
     } catch (error) {
       this.initializationError = error as Error;
-      console.error('❌ Database initialization failed:', error);
+      this.useFallbackStorage = true;
+      console.error('❌ Database initialization failed, using fallback storage:', error);
       
       // Provide helpful error messages
       if (error instanceof Error) {
         if (error.message.includes('fetch')) {
           console.error('💡 This might be due to missing Vercel KV configuration');
           console.error('💡 Please ensure KV_REST_API_URL and KV_REST_API_TOKEN are set in Vercel');
+          console.error('💡 Using localStorage as fallback for now');
         }
       }
     }
   }
 
   // Get initialization status
-  public getInitializationStatus(): { initialized: boolean; error: Error | null } {
+  public getInitializationStatus(): { initialized: boolean; error: Error | null; usingFallback: boolean } {
     return {
       initialized: this.isInitialized,
-      error: this.initializationError
+      error: this.initializationError,
+      usingFallback: this.useFallbackStorage
     };
+  }
+
+  // Get storage status information
+  public getStorageStatus(): { type: 'vercel-kv' | 'localStorage' | 'error'; message: string } {
+    if (this.useFallbackStorage) {
+      return {
+        type: 'localStorage',
+        message: 'Using browser localStorage as fallback storage. Data will only persist locally.'
+      };
+    } else if (this.isInitialized) {
+      return {
+        type: 'vercel-kv',
+        message: 'Connected to Vercel KV database. Data is synced globally.'
+      };
+    } else {
+      return {
+        type: 'error',
+        message: this.initializationError?.message || 'Database initialization failed'
+      };
+    }
   }
 
   // Health check with retry mechanism and better error reporting
@@ -182,8 +225,31 @@ export class DatabaseService {
     throw new Error(`${operationName} failed: ${lastError instanceof Error ? lastError.message : 'Unknown error'}`);
   }
 
-  // Subject Management with global persistence
+  // Subject Management with global persistence and fallback
   async saveSubject(subject: Subject): Promise<void> {
+    if (this.useFallbackStorage) {
+      // Use localStorage as fallback
+      console.warn('🔶 Using fallback storage for subject:', subject.name);
+      
+      // Save individual subject
+      this.setLocalStorage(`${this.prefix}subject:${subject.id}`, {
+        ...subject,
+        lastSynced: new Date().toISOString()
+      });
+      
+      // Update subjects list
+      const subjectIds = this.getLocalStorage<string[]>(`${this.prefix}subjects:list`) || [];
+      if (!subjectIds.includes(subject.id)) {
+        subjectIds.push(subject.id);
+        this.setLocalStorage(`${this.prefix}subjects:list`, subjectIds);
+      }
+      
+      // Update global sync timestamp
+      this.setLocalStorage(`${this.prefix}last_update`, new Date().toISOString());
+      
+      return; // Exit early for fallback
+    }
+
     return this.executeWithRetry(async () => {
       // Add timestamp for global sync
       const subjectWithTimestamp = {
@@ -212,6 +278,22 @@ export class DatabaseService {
   }
 
   async getAllSubjects(): Promise<Subject[]> {
+    if (this.useFallbackStorage) {
+      // Use localStorage as fallback
+      const subjectIds = this.getLocalStorage<string[]>(`${this.prefix}subjects:list`) || [];
+      const subjects: Subject[] = [];
+      
+      for (const id of subjectIds) {
+        const subject = this.getLocalStorage<Subject>(`${this.prefix}subject:${id}`);
+        if (subject) {
+          subjects.push(subject);
+        }
+      }
+      
+      console.warn('🔶 Retrieved subjects from fallback storage:', subjects.length);
+      return subjects;
+    }
+
     return this.executeWithRetry(async () => {
       const subjectIds = await kv.get<string[]>(`${this.prefix}subjects:list`) || [];
       const subjects: Subject[] = [];
@@ -227,8 +309,38 @@ export class DatabaseService {
     }, 'getAllSubjects', 2, []); // Provide empty array as fallback
   }
 
-  // Question Management with global persistence
+  // Question Management with global persistence and fallback
   async saveQuestion(question: Question): Promise<void> {
+    if (this.useFallbackStorage) {
+      // Use localStorage as fallback
+      console.warn('🔶 Using fallback storage for question:', question.question.substring(0, 50) + '...');
+      
+      // Save individual question
+      this.setLocalStorage(`${this.prefix}question:${question.id}`, {
+        ...question,
+        lastSynced: new Date().toISOString()
+      });
+      
+      // Update subject's questions list
+      const subjectQuestionIds = this.getLocalStorage<string[]>(`${this.prefix}subject:${question.subjectId}:questions`) || [];
+      if (!subjectQuestionIds.includes(question.id)) {
+        subjectQuestionIds.push(question.id);
+        this.setLocalStorage(`${this.prefix}subject:${question.subjectId}:questions`, subjectQuestionIds);
+      }
+      
+      // Update global questions list
+      const allQuestionIds = this.getLocalStorage<string[]>(`${this.prefix}questions:list`) || [];
+      if (!allQuestionIds.includes(question.id)) {
+        allQuestionIds.push(question.id);
+        this.setLocalStorage(`${this.prefix}questions:list`, allQuestionIds);
+      }
+      
+      // Update global sync timestamp
+      this.setLocalStorage(`${this.prefix}last_update`, new Date().toISOString());
+      
+      return; // Exit early for fallback
+    }
+
     return this.executeWithRetry(async () => {
       // Add timestamp for global sync
       const questionWithTimestamp = {
@@ -264,6 +376,22 @@ export class DatabaseService {
   }
 
   async getAllQuestions(): Promise<Question[]> {
+    if (this.useFallbackStorage) {
+      // Use localStorage as fallback
+      const questionIds = this.getLocalStorage<string[]>(`${this.prefix}questions:list`) || [];
+      const questions: Question[] = [];
+      
+      for (const id of questionIds) {
+        const question = this.getLocalStorage<Question>(`${this.prefix}question:${id}`);
+        if (question) {
+          questions.push(question);
+        }
+      }
+      
+      console.warn('🔶 Retrieved questions from fallback storage:', questions.length);
+      return questions;
+    }
+
     return this.executeWithRetry(async () => {
       const questionIds = await kv.get<string[]>(`${this.prefix}questions:list`) || [];
       const questions: Question[] = [];

@@ -102,16 +102,32 @@ const SubjectManagerGlobal: React.FC<SubjectManagerGlobalProps> = ({
         updatedAt: now
       };
 
-      // Save to global database
+      // Check database status
+      const storageStatus = dbService.getStorageStatus();
+
+      // Save to database (will use fallback if needed)
       await dbService.saveSubject(subjectData);
+
+      // Show appropriate success message based on storage type
+      if (storageStatus.type === 'localStorage') {
+        if (selectedSubject) {
+          setSuccess(`✅ Subject updated locally! Note: Using browser storage as fallback. To sync globally, please configure Vercel KV database.`);
+        } else {
+          setSuccess(`✅ Subject created locally! Note: Using browser storage as fallback. To sync globally, please configure Vercel KV database.`);
+        }
+      } else {
+        if (selectedSubject) {
+          setSuccess('✅ Subject updated successfully and synced globally!');
+        } else {
+          setSuccess('✅ Subject created successfully and synced globally!');
+        }
+      }
 
       // Update local state
       if (selectedSubject) {
         setSubjects(prev => prev.map(s => s.id === selectedSubject.id ? subjectData : s));
-        setSuccess('Subject updated successfully and synced globally!');
       } else {
         setSubjects(prev => [...prev, subjectData]);
-        setSuccess('Subject created successfully and synced globally!');
       }
 
       // Refresh global state to sync with other devices
@@ -120,7 +136,7 @@ const SubjectManagerGlobal: React.FC<SubjectManagerGlobalProps> = ({
       handleCloseDialog();
     } catch (error) {
       console.error('Failed to save subject:', error);
-      setError('Failed to save subject. Please try again.');
+      setError(`❌ Failed to save subject: ${error instanceof Error ? error.message : 'Unknown error'}. Please check your database configuration.`);
     } finally {
       setLoading(false);
     }

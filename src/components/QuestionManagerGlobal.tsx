@@ -143,16 +143,32 @@ const QuestionManagerGlobal: React.FC<QuestionManagerGlobalProps> = ({
         updatedAt: now
       };
 
+      // Check database status
+      const storageStatus = dbService.getStorageStatus();
+
       // Save to global database
       await dbService.saveQuestion(questionData);
 
-      // Update local state and show success message
+      // Update local state and show success message based on storage type
+      if (storageStatus.type === 'localStorage') {
+        if (selectedQuestion) {
+          setSuccess(`✅ Question updated locally! Note: Using browser storage as fallback. To sync globally, please configure Vercel KV database.`);
+        } else {
+          setSuccess(`✅ Question added locally! Note: Using browser storage as fallback. To sync globally, please configure Vercel KV database.`);
+        }
+      } else {
+        if (selectedQuestion) {
+          setSuccess(`✅ Question updated successfully! Available to all students globally.`);
+        } else {
+          setSuccess(`✅ New question added successfully! Available to all students globally.`);
+        }
+      }
+
+      // Update local state
       if (selectedQuestion) {
         setQuestions(prev => prev.map(q => q.id === questionData.id ? questionData : q));
-        setSuccess(`Question updated successfully! Available to all students globally.`);
       } else {
         setQuestions(prev => [...prev, questionData]);
-        setSuccess(`New question added successfully! Available to all students globally.`);
       }
 
       // Refresh global state to sync across all devices
@@ -161,7 +177,7 @@ const QuestionManagerGlobal: React.FC<QuestionManagerGlobalProps> = ({
       handleCloseDialog();
     } catch (error) {
       console.error('Failed to save question:', error);
-      setError(error instanceof Error ? error.message : 'Failed to save question');
+      setError(`❌ Failed to save question: ${error instanceof Error ? error.message : 'Unknown error'}. Please check your database configuration.`);
     } finally {
       setLoading(false);
     }
