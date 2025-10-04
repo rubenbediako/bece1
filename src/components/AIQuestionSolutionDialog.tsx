@@ -126,25 +126,64 @@ export const AIQuestionSolutionDialog: React.FC<Props> = ({ question, subject, o
 
 
   const generatePodcastConversation = async () => {
-    if (!aiAnswer) return;
+    if (!aiAnswer) {
+      console.error('Cannot generate podcast: No AI answer available');
+      return;
+    }
 
     setIsGeneratingPodcast(true);
     try {
+      console.log('Checking for cached podcast for question:', question.id);
+      
       // Check if we already have a cached podcast
-      const cachedPodcast = await podcastAPI.get(question.id);
+      let cachedPodcast = null;
+      try {
+        cachedPodcast = await podcastAPI.get(question.id);
+      } catch (dbError) {
+        console.warn('Database error when fetching cached podcast, continuing with generation:', dbError);
+      }
+      
       if (cachedPodcast) {
+        console.log('Found cached podcast:', cachedPodcast);
         setPodcastConversation(cachedPodcast);
         return;
       }
 
+      console.log('No cached podcast found. Generating new conversation...');
+      console.log('AI Answer:', aiAnswer);
+      console.log('Question:', question.question);
+
       // Generate new podcast conversation
       const conversation = await aiService.generatePodcastConversation(aiAnswer, question.question);
+      console.log('Generated conversation:', conversation);
+      
+      if (!conversation || !conversation.dialogues || conversation.dialogues.length === 0) {
+        throw new Error('Generated conversation is empty or invalid');
+      }
+
       setPodcastConversation(conversation);
       
       // Save to database for future use
-      await podcastAPI.save(question.id, conversation);
+      console.log('Saving conversation to database...');
+      try {
+        await podcastAPI.save(question.id, conversation);
+        console.log('Conversation saved successfully');
+      } catch (dbError) {
+        console.warn('Database error when saving conversation, but conversation is still available:', dbError);
+        // Don't fail the entire operation if database save fails
+      }
     } catch (error) {
       console.error('Error generating podcast conversation:', error);
+      console.error('Error details:', {
+        message: error instanceof Error ? error.message : 'Unknown error',
+        stack: error instanceof Error ? error.stack : 'No stack trace',
+        aiAnswer: aiAnswer ? 'Present' : 'Missing',
+        questionId: question.id,
+        questionText: question.question
+      });
+      
+      // Show user-friendly error
+      alert(`Failed to generate podcast conversation: ${error instanceof Error ? error.message : 'Unknown error'}`);
     } finally {
       setIsGeneratingPodcast(false);
     }
@@ -500,6 +539,50 @@ export const AIQuestionSolutionDialog: React.FC<Props> = ({ question, subject, o
                   >
                     {isGeneratingPodcast ? 'Generating Conversation...' : 'Generate Podcast'}
                   </Button>
+                  {import.meta.env.DEV && (
+                    <>
+                      <Button
+                        onClick={() => {
+                          console.log('Debug Info:');
+                          console.log('AI Answer:', aiAnswer);
+                          console.log('Question:', question);
+                          console.log('Subject:', subject);
+                          console.log('Speech Synthesis Available:', !!speechSynthesis);
+                          if (speechSynthesis) {
+                            console.log('Available Voices:', speechSynthesis.getVoices());
+                          }
+                        }}
+                        variant="outlined"
+                        size="small"
+                        sx={{ ml: 2 }}
+                      >
+                        Debug Info
+                      </Button>
+                      <Button
+                        onClick={async () => {
+                          if (!aiAnswer) {
+                            alert('No AI answer available for testing');
+                            return;
+                          }
+                          
+                          console.log('Testing podcast generation without database...');
+                          try {
+                            const testConversation = await aiService.generatePodcastConversation(aiAnswer, question.question);
+                            console.log('✅ Test successful! Generated conversation:', testConversation);
+                            setPodcastConversation(testConversation);
+                          } catch (error) {
+                            console.error('❌ Test failed:', error);
+                            alert(`Test failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
+                          }
+                        }}
+                        variant="outlined"
+                        size="small"
+                        sx={{ ml: 1 }}
+                      >
+                        Test Generate
+                      </Button>
+                    </>
+                  )}
                   {isGeneratingPodcast && <LinearProgress sx={{ mt: 2 }} />}
                 </Box>
               ) : (

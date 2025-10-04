@@ -99,11 +99,41 @@ export class DatabaseService {
 
   // Podcast Conversation Management
   async savePodcastConversation(questionId: string, podcast: PodcastConversation): Promise<void> {
-    await kv.set(`podcast:${questionId}`, podcast);
+    try {
+      console.log('DatabaseService.savePodcastConversation: Saving podcast for question:', questionId);
+      console.log('DatabaseService.savePodcastConversation: Podcast data:', podcast);
+      
+      if (!questionId) {
+        throw new Error('Question ID is required');
+      }
+      
+      if (!podcast) {
+        throw new Error('Podcast conversation data is required');
+      }
+
+      await kv.set(`podcast:${questionId}`, podcast);
+      console.log('DatabaseService.savePodcastConversation: Successfully saved');
+    } catch (error) {
+      console.error('DatabaseService.savePodcastConversation: Error:', error);
+      throw error;
+    }
   }
 
   async getPodcastConversation(questionId: string): Promise<PodcastConversation | null> {
-    return await kv.get<PodcastConversation>(`podcast:${questionId}`);
+    try {
+      console.log('DatabaseService.getPodcastConversation: Fetching podcast for question:', questionId);
+      
+      if (!questionId) {
+        throw new Error('Question ID is required');
+      }
+
+      const result = await kv.get<PodcastConversation>(`podcast:${questionId}`);
+      console.log('DatabaseService.getPodcastConversation: Result:', result);
+      return result;
+    } catch (error) {
+      console.error('DatabaseService.getPodcastConversation: Error:', error);
+      throw error;
+    }
   }
 
   // User Management

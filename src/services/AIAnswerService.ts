@@ -129,20 +129,47 @@ export class AIAnswerService {
 
   // Generate podcast conversation from answer
   async generatePodcastConversation(answer: AIAnswer, questionText: string): Promise<PodcastConversation> {
-    const dialogues = await this.createDialogues(answer, questionText);
-    const transcript = this.generateTranscript(dialogues);
+    try {
+      console.log('AIAnswerService: Starting podcast generation...');
+      console.log('Answer:', answer);
+      console.log('Question text:', questionText);
 
-    return {
-      id: this.generateId(),
-      questionId: answer.questionId,
-      answerId: answer.id,
-      title: `Discussion: ${this.extractTitle(questionText)}`,
-      dialogues,
-      characters: this.characters,
-      transcript,
-      createdAt: new Date().toISOString(),
-      status: 'ready'
-    };
+      if (!answer || !answer.paragraphs || answer.paragraphs.length === 0) {
+        throw new Error('Invalid AI answer provided for podcast generation');
+      }
+
+      if (!questionText || questionText.trim().length === 0) {
+        throw new Error('Invalid question text provided for podcast generation');
+      }
+
+      const dialogues = this.createDialogues(answer, questionText);
+      console.log('Generated dialogues:', dialogues);
+
+      if (!dialogues || dialogues.length === 0) {
+        throw new Error('Failed to create dialogues for podcast');
+      }
+
+      const transcript = this.generateTranscript(dialogues);
+      console.log('Generated transcript:', transcript);
+
+      const conversation: PodcastConversation = {
+        id: this.generateId(),
+        questionId: answer.questionId,
+        answerId: answer.id,
+        title: `Discussion: ${this.extractTitle(questionText)}`,
+        dialogues,
+        characters: this.characters,
+        transcript,
+        createdAt: new Date().toISOString(),
+        status: 'ready'
+      };
+
+      console.log('Final conversation object:', conversation);
+      return conversation;
+    } catch (error) {
+      console.error('AIAnswerService: Error in generatePodcastConversation:', error);
+      throw error;
+    }
   }
 
   private getTemplate(subject: string, marks: number): AnswerTemplate {
@@ -356,78 +383,159 @@ In conclusion, ${topic} represents a significant area of study with broad implic
     return sentences.slice(0, Math.min(numSentences, sentences.length)).join(' ');
   }
 
-  private async createDialogues(answer: AIAnswer, questionText: string): Promise<PodcastDialogue[]> {
-    const dialogues: PodcastDialogue[] = [];
-    let order = 1;
+  private createDialogues(answer: AIAnswer, questionText: string): PodcastDialogue[] {
+    try {
+      console.log('Creating dialogues from answer:', answer);
+      
+      const dialogues: PodcastDialogue[] = [];
+      let order = 1;
 
-    // Teacher introduces the topic
-    dialogues.push({
-      id: this.generateId(),
-      character: this.characters.teacher,
-      text: `Hello Serwaa! Today we're going to discuss an interesting topic: "${questionText}". Are you ready to explore this together?`,
-      order: order++
-    });
-
-    // Student responds with interest
-    dialogues.push({
-      id: this.generateId(),
-      character: this.characters.student,
-      text: `Yes, Mr. Das! I'm excited to learn about this topic. Could you help me understand the main points we should cover?`,
-      order: order++
-    });
-
-    // Break down the answer into conversational segments
-    const paragraphs = answer.paragraphs;
-    
-    for (let i = 0; i < paragraphs.length && i < 6; i++) {
-      const paragraph = paragraphs[i];
-      const simplifiedContent = this.simplifyForConversation(paragraph);
-
-      // Teacher explains a point
+      // Teacher introduces the topic
       dialogues.push({
         id: this.generateId(),
         character: this.characters.teacher,
-        text: `Let me explain this section: ${simplifiedContent}`,
+        text: `Hello Serwaa! Today we're going to discuss an interesting topic: "${this.extractTitle(questionText)}". Are you ready to explore this together?`,
         order: order++
       });
 
-      // Student asks for clarification or shows understanding
-      const studentResponse = i % 2 === 0 
-        ? `That's very helpful, Mr. Das. Could you give me an example to make it clearer?`
-        : `I understand! This connects to what we learned earlier. What should we focus on next?`;
+      // Student responds with interest
+      dialogues.push({
+        id: this.generateId(),
+        character: this.characters.student,
+        text: `Yes, Mr. Das! I'm excited to learn about this topic. Could you help me understand the main points we should cover?`,
+        order: order++
+      });
+
+      // Break down the answer into conversational segments
+      const paragraphs = answer.paragraphs || [];
+      console.log('Processing paragraphs:', paragraphs);
+      
+      if (paragraphs.length === 0) {
+        console.warn('No paragraphs found in answer, using content directly');
+        // Fallback: use the main content if paragraphs are empty
+        const content = answer.content || '';
+        if (content.trim().length > 0) {
+          const simplifiedContent = this.simplifyForConversation(content);
+          
+          dialogues.push({
+            id: this.generateId(),
+            character: this.characters.teacher,
+            text: `Let me explain this topic: ${simplifiedContent}`,
+            order: order++
+          });
+
+          dialogues.push({
+            id: this.generateId(),
+            character: this.characters.student,
+            text: `That's very helpful, Mr. Das. Could you give me an example to make it clearer?`,
+            order: order++
+          });
+        }
+      } else {
+        // Process each paragraph (limit to 4 for better conversation flow)
+        const limitedParagraphs = paragraphs.slice(0, 4);
+        for (let i = 0; i < limitedParagraphs.length; i++) {
+          const paragraph = limitedParagraphs[i];
+          if (!paragraph || paragraph.trim().length === 0) {
+            console.warn(`Skipping empty paragraph at index ${i}`);
+            continue;
+          }
+
+          const simplifiedContent = this.simplifyForConversation(paragraph);
+          if (simplifiedContent.trim().length === 0) {
+            console.warn(`Skipping paragraph with no simplified content at index ${i}`);
+            continue;
+          }
+
+          // Teacher explains a point
+          dialogues.push({
+            id: this.generateId(),
+            character: this.characters.teacher,
+            text: `Let me explain this section: ${simplifiedContent}`,
+            order: order++
+          });
+
+          // Vary student responses for more natural conversation
+          const studentResponses = [
+            `That's very helpful, Mr. Das. Could you give me an example to make it clearer?`,
+            `I understand! This connects to what we learned earlier. What should we focus on next?`,
+            `That makes sense! Can you tell me more about this aspect?`,
+            `Great explanation! How does this relate to the exam requirements?`
+          ];
+          
+          const studentResponse = studentResponses[i % studentResponses.length];
+
+          dialogues.push({
+            id: this.generateId(),
+            character: this.characters.student,
+            text: studentResponse,
+            order: order++
+          });
+        }
+      }
+
+      // Closing dialogue
+      dialogues.push({
+        id: this.generateId(),
+        character: this.characters.teacher,
+        text: `Excellent questions, Serwaa! You've really grasped the key concepts. Remember to practice writing detailed answers using the structure we discussed.`,
+        order: order++
+      });
 
       dialogues.push({
         id: this.generateId(),
         character: this.characters.student,
-        text: studentResponse,
+        text: `Thank you so much, Mr. Das! This conversation has really helped me understand the topic better. I feel more confident about writing comprehensive answers now.`,
         order: order++
       });
+
+      console.log('Created dialogues:', dialogues);
+      return dialogues;
+    } catch (error) {
+      console.error('Error creating dialogues:', error);
+      throw new Error(`Failed to create podcast dialogues: ${error instanceof Error ? error.message : 'Unknown error'}`);
     }
-
-    // Closing dialogue
-    dialogues.push({
-      id: this.generateId(),
-      character: this.characters.teacher,
-      text: `Excellent questions, Serwaa! You've really grasped the key concepts. Remember to practice writing detailed answers using the structure we discussed.`,
-      order: order++
-    });
-
-    dialogues.push({
-      id: this.generateId(),
-      character: this.characters.student,
-      text: `Thank you so much, Mr. Das! This conversation has really helped me understand the topic better. I feel more confident about writing comprehensive answers now.`,
-      order: order++
-    });
-
-    return dialogues;
   }
 
   private simplifyForConversation(paragraph: string): string {
-    // Remove markdown formatting and simplify language for spoken conversation
-    return paragraph
-      .replace(/\*\*(.*?)\*\*/g, '$1')
-      .replace(/\*(.*?)\*/g, '$1')
-      .substring(0, 200) + (paragraph.length > 200 ? '...' : '');
+    if (!paragraph || typeof paragraph !== 'string') {
+      console.warn('Invalid paragraph provided to simplifyForConversation:', paragraph);
+      return 'This is an important concept that we should understand.';
+    }
+
+    try {
+      // Remove markdown formatting and simplify language for spoken conversation
+      let simplified = paragraph
+        .replace(/\*\*(.*?)\*\*/g, '$1') // Remove bold markdown
+        .replace(/\*(.*?)\*/g, '$1')     // Remove italic markdown
+        .replace(/#{1,6}\s*/g, '')       // Remove markdown headers
+        .replace(/\n+/g, ' ')            // Replace newlines with spaces
+        .trim();
+
+      // If the text is too long, truncate it
+      if (simplified.length > 200) {
+        // Try to find a good breaking point (end of sentence)
+        const sentences = simplified.split(/[.!?]+/);
+        let result = '';
+        for (const sentence of sentences) {
+          if ((result + sentence).length > 180) {
+            break;
+          }
+          result += sentence + '.';
+        }
+        simplified = result || simplified.substring(0, 180) + '...';
+      }
+
+      // Ensure we have some meaningful content
+      if (simplified.length < 10) {
+        simplified = 'This is an important concept that requires careful understanding.';
+      }
+
+      return simplified;
+    } catch (error) {
+      console.error('Error in simplifyForConversation:', error);
+      return 'This is an important concept that we should understand.';
+    }
   }
 
   private generateTranscript(dialogues: PodcastDialogue[]): string {

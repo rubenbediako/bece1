@@ -76,11 +76,36 @@ export const aiAnswerAPI = {
 // Podcast API
 export const podcastAPI = {
   async get(questionId: string): Promise<PodcastConversation | null> {
-    return await db.getPodcastConversation(questionId);
+    try {
+      console.log('podcastAPI.get: Fetching podcast for question:', questionId);
+      const result = await db.getPodcastConversation(questionId);
+      console.log('podcastAPI.get: Result:', result);
+      return result;
+    } catch (error) {
+      console.error('podcastAPI.get: Error fetching podcast:', error);
+      throw error;
+    }
   },
 
   async save(questionId: string, podcast: PodcastConversation): Promise<void> {
-    await db.savePodcastConversation(questionId, podcast);
+    try {
+      console.log('podcastAPI.save: Saving podcast for question:', questionId);
+      console.log('podcastAPI.save: Podcast data:', podcast);
+      
+      if (!questionId || !podcast) {
+        throw new Error('Invalid parameters: questionId and podcast are required');
+      }
+
+      if (!podcast.dialogues || podcast.dialogues.length === 0) {
+        throw new Error('Cannot save podcast: No dialogues provided');
+      }
+
+      await db.savePodcastConversation(questionId, podcast);
+      console.log('podcastAPI.save: Podcast saved successfully');
+    } catch (error) {
+      console.error('podcastAPI.save: Error saving podcast:', error);
+      throw error;
+    }
   }
 };
 
