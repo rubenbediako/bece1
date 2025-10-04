@@ -24,6 +24,7 @@ import {
 import { motion } from 'framer-motion';
 import type { Subject, Topic, Question, PredictedTopic } from '../types';
 import PodcastConversation from './PodcastConversation.tsx';
+import AIQuestionSolutionDialog from './AIQuestionSolutionDialog';
 
 interface StudentViewProps {
   subjects: Subject[];
@@ -130,6 +131,7 @@ const StudentView: React.FC<StudentViewProps> = ({
   const [mathExpression, setMathExpression] = useState('');
   const [showMathEditor, setShowMathEditor] = useState(false);
   const [showPodcast, setShowPodcast] = useState(false);
+  const [showAISolution, setShowAISolution] = useState(false);
 
   const getPredictedTopicsForSubject = (subjectId: string) => {
     return predictedTopics
@@ -559,8 +561,42 @@ const StudentView: React.FC<StudentViewProps> = ({
                 </CardContent>
               </Card>
               
-              {/* Detailed Solution */}
-              {selectedQuestion.solution && (
+              {/* AI-Powered Solution for Essay Questions */}
+              {selectedQuestion.type === 'essay' && ['social-studies', 'rme', 'english'].includes(selectedQuestion.subjectId) && (
+                <Card sx={{ mb: 3, bgcolor: 'primary.50', borderLeft: 4, borderColor: 'primary.main' }}>
+                  <CardContent>
+                    <Typography variant="h6" gutterBottom color="primary.main" sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                      🤖 AI-Powered Solution
+                      <Chip 
+                        icon={<Play size={16} />}
+                        label="Podcast Available" 
+                        color="primary" 
+                        size="small"
+                      />
+                    </Typography>
+                    
+                    <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+                      Get a comprehensive AI-generated answer with interactive podcast conversation for this essay question.
+                    </Typography>
+
+                    <Button
+                      variant="contained"
+                      color="primary"
+                      onClick={() => setShowAISolution(true)}
+                      sx={{ mb: 2 }}
+                    >
+                      View AI Solution & Podcast
+                    </Button>
+
+                    <Typography variant="caption" display="block" color="text.secondary">
+                      ✨ Features: {(selectedQuestion.marks ?? selectedQuestion.points ?? 10) >= 12 ? '6-paragraph essay' : 'structured response'} + interactive teacher-student conversation
+                    </Typography>
+                  </CardContent>
+                </Card>
+              )}
+              
+              {/* Manual Solution for Non-Essay Questions */}
+              {(selectedQuestion.type !== 'essay' || !['social-studies', 'rme', 'english'].includes(selectedQuestion.subjectId)) && selectedQuestion.solution && (
                 <Card sx={{ mb: 3, bgcolor: 'warning.50', borderLeft: 4, borderColor: 'warning.main' }}>
                   <CardContent>
                     <Typography variant="h6" gutterBottom color="warning.main" sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
@@ -654,6 +690,15 @@ const StudentView: React.FC<StudentViewProps> = ({
             solution: selectedQuestion.solution
           }}
           onClose={handleClosePodcast}
+        />
+      )}
+
+      {/* AI Solution Dialog */}
+      {showAISolution && selectedQuestion && (
+        <AIQuestionSolutionDialog
+          question={selectedQuestion}
+          subject={subjects.find(s => s.id === selectedQuestion.subjectId)!}
+          onClose={() => setShowAISolution(false)}
         />
       )}
     </Box>
