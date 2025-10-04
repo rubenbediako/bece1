@@ -3,6 +3,11 @@ import type { Subject, Question, User, AIAnswer, PodcastConversation, StudentPro
 
 export class DatabaseService {
   private static instance: DatabaseService;
+  private readonly prefix = 'bece_2026_';
+
+  private constructor() {
+    this.initializeDatabase();
+  }
 
   public static getInstance(): DatabaseService {
     if (!DatabaseService.instance) {
@@ -11,97 +16,256 @@ export class DatabaseService {
     return DatabaseService.instance;
   }
 
-  // Subject Management
-  async saveSubject(subject: Subject): Promise<void> {
-    await kv.set(`subject:${subject.id}`, subject);
-    
-    // Add to subjects list
-    const subjectIds = await kv.get<string[]>('subjects:list') || [];
-    if (!subjectIds.includes(subject.id)) {
-      subjectIds.push(subject.id);
-      await kv.set('subjects:list', subjectIds);
+  // Initialize database connection and setup
+  private async initializeDatabase(): Promise<void> {
+    try {
+      // Test connection
+      await this.healthCheck();
+      console.log('✅ Database initialized successfully');
+    } catch (error) {
+      console.error('❌ Database initialization failed:', error);
     }
+  }
+
+  // Health check with retry mechanism
+  async healthCheck(): Promise<{status: 'ok' | 'error', timestamp: string, version?: string}> {
+    const maxRetries = 3;
+    let lastError: any;
+
+    for (let attempt = 1; attempt <= maxRetries; attempt++) {
+      try {
+        const timestamp = new Date().toISOString();
+        const testKey = `${this.prefix}health_check`;
+        
+        // Write test data
+        await kv.set(testKey, { timestamp, version: '1.0.0' }, { ex: 30 });
+        
+        // Read back test data
+        const retrieved = await kv.get(testKey);
+        
+        if (retrieved) {
+          await kv.del(testKey); // Cleanup
+          return { 
+            status: 'ok', 
+            timestamp, 
+            version: '1.0.0' 
+          };
+        } else {
+          throw new Error('Health check data not found');
+        }
+      } catch (error) {
+        lastError = error;
+        console.warn(`Database health check attempt ${attempt}/${maxRetries} failed:`, error);
+        
+        if (attempt < maxRetries) {
+          // Wait before retry (exponential backoff)
+          await new Promise(resolve => setTimeout(resolve, Math.pow(2, attempt) * 1000));
+        }
+      }
+    }
+
+    console.error('Database health check failed after all retries:', lastError);
+    return { status: 'error', timestamp: new Date().toISOString() };
+  }
+
+  // Enhanced operation wrapper with retry mechanism
+  private async executeWithRetry<T>(
+    operation: () => Promise<T>,
+    operationName: string,
+    maxRetries: number = 2
+  ): Promise<T> {
+    let lastError: any;
+
+    for (let attempt = 1; attempt <= maxRetries; attempt++) {
+      try {
+        return await operation();
+      } catch (error) {
+        lastError = error;
+        console.warn(`${operationName} attempt ${attempt}/${maxRetries} failed:`, error);
+        
+        if (attempt < maxRetries) {
+          // Wait before retry
+          await new Promise(resolve => setTimeout(resolve, 1000 * attempt));
+        }
+      }
+    }
+
+    console.error(`${operationName} failed after ${maxRetries} attempts:`, lastError);
+    throw lastError;
+  }
+
+  // Subject Management with global persistence
+  async saveSubject(subject: Subject): Promise<void> {
+    return this.executeWithRetry(async () => {
+      // Add timestamp for global sync
+      const subjectWithTimestamp = {
+        ...subject,
+        lastSynced: new Date().toISOString()
+      };
+      
+      await kv.set(`${this.prefix}subject:${subject.id}`, subjectWithTimestamp);
+      
+      // Add to global subjects list
+      const subjectIds = await kv.get<string[]>(`${this.prefix}subjects:list`) || [];
+      if (!subjectIds.includes(subject.id)) {
+        subjectIds.push(subject.id);
+        await kv.set(`${this.prefix}subjects:list`, subjectIds);
+      }
+      
+      // Update global sync timestamp
+      await kv.set(`${this.prefix}last_update`, new Date().toISOString());
+    }, 'saveSubject');
   }
 
   async getSubject(id: string): Promise<Subject | null> {
-    return await kv.get<Subject>(`subject:${id}`);
+    return this.executeWithRetry(async () => {
+      return await kv.get<Subject>(`${this.prefix}subject:${id}`);
+    }, 'getSubject');
   }
 
   async getAllSubjects(): Promise<Subject[]> {
-    const subjectIds = await kv.get<string[]>('subjects:list') || [];
-    const subjects: Subject[] = [];
-    
-    for (const id of subjectIds) {
-      const subject = await this.getSubject(id);
-      if (subject) {
-        subjects.push(subject);
+    return this.executeWithRetry(async () => {
+      const subjectIds = await kv.get<string[]>(`${this.prefix}subjects:list`) || [];
+      const subjects: Subject[] = [];
+      
+      for (const id of subjectIds) {
+        const subject = await this.getSubject(id);
+        if (subject) {
+          subjects.push(subject);
+        }
       }
-    }
-    
-    return subjects;
+      
+      return subjects;
+    }, 'getAllSubjects');
   }
 
-  // Question Management
+  // Question Management with global persistence
   async saveQuestion(question: Question): Promise<void> {
-    await kv.set(`question:${question.id}`, question);
-    
-    // Add to subject's questions list
-    const questionIds = await kv.get<string[]>(`subject:${question.subjectId}:questions`) || [];
-    if (!questionIds.includes(question.id)) {
-      questionIds.push(question.id);
-      await kv.set(`subject:${question.subjectId}:questions`, questionIds);
-    }
+    return this.executeWithRetry(async () => {
+      // Add timestamp for global sync
+      const questionWithTimestamp = {
+        ...question,
+        lastSynced: new Date().toISOString()
+      };
+      
+      await kv.set(`${this.prefix}question:${question.id}`, questionWithTimestamp);
+      
+      // Add to subject's questions list
+      const questionIds = await kv.get<string[]>(`${this.prefix}subject:${question.subjectId}:questions`) || [];
+      if (!questionIds.includes(question.id)) {
+        questionIds.push(question.id);
+        await kv.set(`${this.prefix}subject:${question.subjectId}:questions`, questionIds);
+      }
+      
+      // Add to global questions list
+      const allQuestionIds = await kv.get<string[]>(`${this.prefix}questions:list`) || [];
+      if (!allQuestionIds.includes(question.id)) {
+        allQuestionIds.push(question.id);
+        await kv.set(`${this.prefix}questions:list`, allQuestionIds);
+      }
+      
+      // Update global sync timestamp
+      await kv.set(`${this.prefix}last_update`, new Date().toISOString());
+    }, 'saveQuestion');
   }
 
   async getQuestion(id: string): Promise<Question | null> {
-    return await kv.get<Question>(`question:${id}`);
+    return this.executeWithRetry(async () => {
+      return await kv.get<Question>(`${this.prefix}question:${id}`);
+    }, 'getQuestion');
+  }
+
+  async getAllQuestions(): Promise<Question[]> {
+    return this.executeWithRetry(async () => {
+      const questionIds = await kv.get<string[]>(`${this.prefix}questions:list`) || [];
+      const questions: Question[] = [];
+      
+      for (const id of questionIds) {
+        const question = await this.getQuestion(id);
+        if (question) {
+          questions.push(question);
+        }
+      }
+      
+      return questions;
+    }, 'getAllQuestions');
   }
 
   async getQuestionsBySubject(subjectId: string): Promise<Question[]> {
-    const questionIds = await kv.get<string[]>(`subject:${subjectId}:questions`) || [];
-    const questions: Question[] = [];
-    
-    for (const id of questionIds) {
-      const question = await this.getQuestion(id);
-      if (question) {
-        questions.push(question);
+    return this.executeWithRetry(async () => {
+      const questionIds = await kv.get<string[]>(`${this.prefix}subject:${subjectId}:questions`) || [];
+      const questions: Question[] = [];
+      
+      for (const id of questionIds) {
+        const question = await this.getQuestion(id);
+        if (question) {
+          questions.push(question);
+        }
       }
-    }
-    
-    return questions;
+      
+      return questions;
+    }, 'getQuestionsBySubject');
   }
 
   async deleteQuestion(id: string): Promise<void> {
-    const question = await this.getQuestion(id);
-    if (question) {
-      // Remove from subject's questions list
-      const questionIds = await kv.get<string[]>(`subject:${question.subjectId}:questions`) || [];
-      const updatedIds = questionIds.filter(qId => qId !== id);
-      await kv.set(`subject:${question.subjectId}:questions`, updatedIds);
-      
-      // Delete the question
-      await kv.del(`question:${id}`);
-      
-      // Delete associated AI answers and podcasts
-      await kv.del(`ai-answer:${id}`);
-      await kv.del(`podcast:${id}`);
-    }
+    return this.executeWithRetry(async () => {
+      const question = await this.getQuestion(id);
+      if (question) {
+        // Remove from subject's questions list
+        const questionIds = await kv.get<string[]>(`${this.prefix}subject:${question.subjectId}:questions`) || [];
+        const updatedIds = questionIds.filter(qId => qId !== id);
+        await kv.set(`${this.prefix}subject:${question.subjectId}:questions`, updatedIds);
+        
+        // Remove from global questions list
+        const allQuestionIds = await kv.get<string[]>(`${this.prefix}questions:list`) || [];
+        const updatedAllIds = allQuestionIds.filter(qId => qId !== id);
+        await kv.set(`${this.prefix}questions:list`, updatedAllIds);
+        
+        // Delete the question
+        await kv.del(`${this.prefix}question:${id}`);
+        
+        // Delete associated AI answers and podcasts
+        await kv.del(`${this.prefix}ai-answer:${id}`);
+        await kv.del(`${this.prefix}podcast:${id}`);
+        
+        // Update global sync timestamp
+        await kv.set(`${this.prefix}last_update`, new Date().toISOString());
+      }
+    }, 'deleteQuestion');
   }
 
-  // AI Answer Management
+  // AI Answer Management with global persistence
   async saveAIAnswer(questionId: string, aiAnswer: AIAnswer): Promise<void> {
-    await kv.set(`ai-answer:${questionId}`, aiAnswer);
+    return this.executeWithRetry(async () => {
+      const aiAnswerWithTimestamp = {
+        ...aiAnswer,
+        lastSynced: new Date().toISOString()
+      };
+      
+      await kv.set(`${this.prefix}ai-answer:${questionId}`, aiAnswerWithTimestamp);
+      
+      // Track in global AI answers list for sync
+      const aiAnswerIds = await kv.get<string[]>(`${this.prefix}ai-answers:list`) || [];
+      if (!aiAnswerIds.includes(questionId)) {
+        aiAnswerIds.push(questionId);
+        await kv.set(`${this.prefix}ai-answers:list`, aiAnswerIds);
+      }
+      
+      // Update global sync timestamp
+      await kv.set(`${this.prefix}last_update`, new Date().toISOString());
+    }, 'saveAIAnswer');
   }
 
   async getAIAnswer(questionId: string): Promise<AIAnswer | null> {
-    return await kv.get<AIAnswer>(`ai-answer:${questionId}`);
+    return this.executeWithRetry(async () => {
+      return await kv.get<AIAnswer>(`${this.prefix}ai-answer:${questionId}`);
+    }, 'getAIAnswer');
   }
 
-  // Podcast Conversation Management
+  // Podcast Conversation Management with global persistence
   async savePodcastConversation(questionId: string, podcast: PodcastConversation): Promise<void> {
-    try {
+    return this.executeWithRetry(async () => {
       console.log('DatabaseService.savePodcastConversation: Saving podcast for question:', questionId);
-      console.log('DatabaseService.savePodcastConversation: Podcast data:', podcast);
       
       if (!questionId) {
         throw new Error('Question ID is required');
@@ -111,62 +275,133 @@ export class DatabaseService {
         throw new Error('Podcast conversation data is required');
       }
 
-      await kv.set(`podcast:${questionId}`, podcast);
-      console.log('DatabaseService.savePodcastConversation: Successfully saved');
-    } catch (error) {
-      console.error('DatabaseService.savePodcastConversation: Error:', error);
-      throw error;
-    }
+      const podcastWithTimestamp = {
+        ...podcast,
+        lastSynced: new Date().toISOString()
+      };
+
+      await kv.set(`${this.prefix}podcast:${questionId}`, podcastWithTimestamp);
+      
+      // Track in global podcasts list for sync
+      const podcastIds = await kv.get<string[]>(`${this.prefix}podcasts:list`) || [];
+      if (!podcastIds.includes(questionId)) {
+        podcastIds.push(questionId);
+        await kv.set(`${this.prefix}podcasts:list`, podcastIds);
+      }
+      
+      // Update global sync timestamp
+      await kv.set(`${this.prefix}last_update`, new Date().toISOString());
+      
+      console.log('DatabaseService.savePodcastConversation: Successfully saved with global sync');
+    }, 'savePodcastConversation');
   }
 
   async getPodcastConversation(questionId: string): Promise<PodcastConversation | null> {
-    try {
+    return this.executeWithRetry(async () => {
       console.log('DatabaseService.getPodcastConversation: Fetching podcast for question:', questionId);
       
       if (!questionId) {
         throw new Error('Question ID is required');
       }
 
-      const result = await kv.get<PodcastConversation>(`podcast:${questionId}`);
-      console.log('DatabaseService.getPodcastConversation: Result:', result);
+      const result = await kv.get<PodcastConversation>(`${this.prefix}podcast:${questionId}`);
+      console.log('DatabaseService.getPodcastConversation: Result:', result ? 'Found' : 'Not found');
       return result;
-    } catch (error) {
-      console.error('DatabaseService.getPodcastConversation: Error:', error);
-      throw error;
-    }
+    }, 'getPodcastConversation');
   }
 
-  // User Management
+  // User Management with global persistence
   async saveUser(user: User): Promise<void> {
-    await kv.set(`user:${user.id}`, user);
+    return this.executeWithRetry(async () => {
+      const userWithTimestamp = {
+        ...user,
+        lastSynced: new Date().toISOString()
+      };
+      
+      await kv.set(`${this.prefix}user:${user.id}`, userWithTimestamp);
+      
+      // Add to global users list
+      const userIds = await kv.get<string[]>(`${this.prefix}users:list`) || [];
+      if (!userIds.includes(user.id)) {
+        userIds.push(user.id);
+        await kv.set(`${this.prefix}users:list`, userIds);
+      }
+      
+      // Update global sync timestamp
+      await kv.set(`${this.prefix}last_update`, new Date().toISOString());
+    }, 'saveUser');
   }
 
   async getUser(id: string): Promise<User | null> {
-    return await kv.get<User>(`user:${id}`);
+    return this.executeWithRetry(async () => {
+      return await kv.get<User>(`${this.prefix}user:${id}`);
+    }, 'getUser');
   }
 
   async getUserByEmail(email: string): Promise<User | null> {
-    // Create email->id mapping
-    const userId = await kv.get<string>(`email:${email}`);
-    if (userId) {
-      return await this.getUser(userId);
-    }
-    return null;
+    return this.executeWithRetry(async () => {
+      // Create email->id mapping
+      const userId = await kv.get<string>(`${this.prefix}email:${email}`);
+      if (userId) {
+        return await this.getUser(userId);
+      }
+      return null;
+    }, 'getUserByEmail');
   }
 
   async createUser(user: User): Promise<void> {
-    await this.saveUser(user);
-    // Create email->id mapping for quick lookup
-    await kv.set(`email:${user.email}`, user.id);
+    return this.executeWithRetry(async () => {
+      await this.saveUser(user);
+      // Create email->id mapping for quick lookup
+      await kv.set(`${this.prefix}email:${user.email}`, user.id);
+    }, 'createUser');
   }
 
-  // Student Progress Tracking
+  // Student Progress Tracking with global persistence
   async saveStudentProgress(userId: string, subjectId: string, progress: StudentProgress): Promise<void> {
-    await kv.set(`progress:${userId}:${subjectId}`, progress);
+    return this.executeWithRetry(async () => {
+      const progressWithTimestamp = {
+        ...progress,
+        lastSynced: new Date().toISOString()
+      };
+      
+      await kv.set(`${this.prefix}progress:${userId}:${subjectId}`, progressWithTimestamp);
+      
+      // Track in global progress list
+      const progressKey = `${userId}:${subjectId}`;
+      const progressIds = await kv.get<string[]>(`${this.prefix}progress:list`) || [];
+      if (!progressIds.includes(progressKey)) {
+        progressIds.push(progressKey);
+        await kv.set(`${this.prefix}progress:list`, progressIds);
+      }
+      
+      // Update global sync timestamp
+      await kv.set(`${this.prefix}last_update`, new Date().toISOString());
+    }, 'saveStudentProgress');
   }
 
   async getStudentProgress(userId: string, subjectId: string): Promise<StudentProgress | null> {
-    return await kv.get<StudentProgress>(`progress:${userId}:${subjectId}`);
+    return this.executeWithRetry(async () => {
+      return await kv.get<StudentProgress>(`${this.prefix}progress:${userId}:${subjectId}`);
+    }, 'getStudentProgress');
+  }
+
+  async getAllStudentProgress(userId: string): Promise<StudentProgress[]> {
+    return this.executeWithRetry(async () => {
+      const progressIds = await kv.get<string[]>(`${this.prefix}progress:list`) || [];
+      const userProgressIds = progressIds.filter(id => id.startsWith(`${userId}:`));
+      const progressList: StudentProgress[] = [];
+      
+      for (const progressId of userProgressIds) {
+        const [, subjectId] = progressId.split(':');
+        const progress = await this.getStudentProgress(userId, subjectId);
+        if (progress) {
+          progressList.push(progress);
+        }
+      }
+      
+      return progressList;
+    }, 'getAllStudentProgress');
   }
 
   // Analytics and Statistics
@@ -211,22 +446,411 @@ export class DatabaseService {
     console.log('Cache clearing not implemented yet');
   }
 
-  // Health Check
-  async healthCheck(): Promise<{status: 'ok' | 'error', timestamp: string}> {
-    try {
-      await kv.set('health-check', Date.now());
-      const value = await kv.get('health-check');
-      return {
-        status: value ? 'ok' : 'error',
-        timestamp: new Date().toISOString()
-      };
-    } catch (error) {
-      return {
-        status: 'error',
-        timestamp: new Date().toISOString()
-      };
-    }
+  // Global Sync Management for cross-device data consistency
+  async getLastSyncTimestamp(): Promise<string | null> {
+    return this.executeWithRetry(async () => {
+      return await kv.get<string>(`${this.prefix}last_update`);
+    }, 'getLastSyncTimestamp');
   }
+
+  async forceFullSync(): Promise<{
+    subjects: number;
+    questions: number;
+    aiAnswers: number;
+    podcasts: number;
+    users: number;
+    progressRecords: number;
+    lastSync: string;
+  }> {
+    return this.executeWithRetry(async () => {
+      const [subjects, questionIds, aiAnswerIds, podcastIds, userIds, progressIds] = await Promise.all([
+        this.getAllSubjects(),
+        kv.get<string[]>(`${this.prefix}questions:list`),
+        kv.get<string[]>(`${this.prefix}ai-answers:list`),
+        kv.get<string[]>(`${this.prefix}podcasts:list`),
+        kv.get<string[]>(`${this.prefix}users:list`),
+        kv.get<string[]>(`${this.prefix}progress:list`)
+      ]);
+
+      const syncTimestamp = new Date().toISOString();
+      await kv.set(`${this.prefix}last_update`, syncTimestamp);
+
+      return {
+        subjects: subjects.length,
+        questions: (questionIds || []).length,
+        aiAnswers: (aiAnswerIds || []).length,
+        podcasts: (podcastIds || []).length,
+        users: (userIds || []).length,
+        progressRecords: (progressIds || []).length,
+        lastSync: syncTimestamp
+      };
+    }, 'forceFullSync');
+  }
+
+  async clearAllData(): Promise<void> {
+    console.warn('⚠️ Clearing all application data - this cannot be undone!');
+    return this.executeWithRetry(async () => {
+      // Get all data lists
+      const [subjectIds, questionIds, aiAnswerIds, podcastIds, userIds, progressIds] = await Promise.all([
+        kv.get<string[]>(`${this.prefix}subjects:list`),
+        kv.get<string[]>(`${this.prefix}questions:list`),
+        kv.get<string[]>(`${this.prefix}ai-answers:list`),
+        kv.get<string[]>(`${this.prefix}podcasts:list`),
+        kv.get<string[]>(`${this.prefix}users:list`),
+        kv.get<string[]>(`${this.prefix}progress:list`)
+      ]);
+
+      // Delete all subjects and their questions
+      for (const subjectId of (subjectIds || [])) {
+        const subjectQuestionIds = await kv.get<string[]>(`${this.prefix}subject:${subjectId}:questions`) || [];
+        
+        // Delete all questions for this subject
+        for (const questionId of subjectQuestionIds) {
+          await kv.del(`${this.prefix}question:${questionId}`);
+        }
+        
+        // Delete subject questions list
+        await kv.del(`${this.prefix}subject:${subjectId}:questions`);
+        
+        // Delete subject
+        await kv.del(`${this.prefix}subject:${subjectId}`);
+      }
+
+      // Delete all questions
+      for (const questionId of (questionIds || [])) {
+        await kv.del(`${this.prefix}question:${questionId}`);
+      }
+
+      // Delete all AI answers
+      for (const questionId of (aiAnswerIds || [])) {
+        await kv.del(`${this.prefix}ai-answer:${questionId}`);
+      }
+
+      // Delete all podcasts
+      for (const questionId of (podcastIds || [])) {
+        await kv.del(`${this.prefix}podcast:${questionId}`);
+      }
+
+      // Delete all users
+      for (const userId of (userIds || [])) {
+        await kv.del(`${this.prefix}user:${userId}`);
+      }
+
+      // Delete all progress records
+      for (const progressId of (progressIds || [])) {
+        await kv.del(`${this.prefix}progress:${progressId}`);
+      }
+
+      // Delete global lists
+      await Promise.all([
+        kv.del(`${this.prefix}subjects:list`),
+        kv.del(`${this.prefix}questions:list`),
+        kv.del(`${this.prefix}ai-answers:list`),
+        kv.del(`${this.prefix}podcasts:list`),
+        kv.del(`${this.prefix}users:list`),
+        kv.del(`${this.prefix}progress:list`),
+        kv.del(`${this.prefix}last_update`)
+      ]);
+
+      console.log('✅ All application data cleared successfully');
+    }, 'clearAllData');
+  }
+
+  // Data integrity check
+  async verifyDataIntegrity(): Promise<{
+    isValid: boolean;
+    issues: string[];
+    summary: {
+      subjects: number;
+      questions: number;
+      aiAnswers: number;
+      podcasts: number;
+      users: number;
+      progressRecords: number;
+    };
+  }> {
+    return this.executeWithRetry(async () => {
+      const issues: string[] = [];
+      
+      // Check subjects
+      const subjectIds = await kv.get<string[]>(`${this.prefix}subjects:list`) || [];
+      const actualSubjects = [];
+      
+      for (const subjectId of subjectIds) {
+        const subject = await kv.get(`${this.prefix}subject:${subjectId}`);
+        if (!subject) {
+          issues.push(`Subject ${subjectId} is listed but not found in database`);
+        } else {
+          actualSubjects.push(subject);
+        }
+      }
+
+      // Check questions
+      const questionIds = await kv.get<string[]>(`${this.prefix}questions:list`) || [];
+      let validQuestions = 0;
+      
+      for (const questionId of questionIds) {
+        const question = await kv.get(`${this.prefix}question:${questionId}`);
+        if (!question) {
+          issues.push(`Question ${questionId} is listed but not found in database`);
+        } else {
+          validQuestions++;
+        }
+      }
+
+      // Check subject-question relationships
+      for (const subjectId of subjectIds) {
+        const subjectQuestionIds = await kv.get<string[]>(`${this.prefix}subject:${subjectId}:questions`) || [];
+        
+        for (const questionId of subjectQuestionIds) {
+          const question = await kv.get(`${this.prefix}question:${questionId}`);
+          if (!question) {
+            issues.push(`Question ${questionId} is linked to subject ${subjectId} but not found in database`);
+          } else if (!questionIds.includes(questionId)) {
+            issues.push(`Question ${questionId} exists but is not in global questions list`);
+          }
+        }
+      }
+
+      // Check AI answers
+      const aiAnswerIds = await kv.get<string[]>(`${this.prefix}ai-answers:list`) || [];
+      for (const questionId of aiAnswerIds) {
+        const aiAnswer = await kv.get(`${this.prefix}ai-answer:${questionId}`);
+        if (!aiAnswer) {
+          issues.push(`AI Answer for question ${questionId} is listed but not found in database`);
+        }
+      }
+
+      // Check podcasts
+      const podcastIds = await kv.get<string[]>(`${this.prefix}podcasts:list`) || [];
+      for (const questionId of podcastIds) {
+        const podcast = await kv.get(`${this.prefix}podcast:${questionId}`);
+        if (!podcast) {
+          issues.push(`Podcast for question ${questionId} is listed but not found in database`);
+        }
+      }
+
+      // Check users
+      const userIds = await kv.get<string[]>(`${this.prefix}users:list`) || [];
+      for (const userId of userIds) {
+        const user = await kv.get(`${this.prefix}user:${userId}`);
+        if (!user) {
+          issues.push(`User ${userId} is listed but not found in database`);
+        }
+      }
+
+      // Check progress records
+      const progressIds = await kv.get<string[]>(`${this.prefix}progress:list`) || [];
+      for (const progressId of progressIds) {
+        const progress = await kv.get(`${this.prefix}progress:${progressId}`);
+        if (!progress) {
+          issues.push(`Progress record ${progressId} is listed but not found in database`);
+        }
+      }
+
+      return {
+        isValid: issues.length === 0,
+        issues,
+        summary: {
+          subjects: actualSubjects.length,
+          questions: validQuestions,
+          aiAnswers: aiAnswerIds.length,
+          podcasts: podcastIds.length,
+          users: userIds.length,
+          progressRecords: progressIds.length
+        }
+      };
+    }, 'verifyDataIntegrity');
+  }
+
+  // Global State Management for cross-device consistency
+  async getGlobalState(): Promise<{
+    lastSync: string | null;
+    dataVersion: string;
+    totalRecords: {
+      subjects: number;
+      questions: number;
+      aiAnswers: number;
+      podcasts: number;
+      users: number;
+      progressRecords: number;
+    };
+  }> {
+    return this.executeWithRetry(async () => {
+      const [lastSync, subjectIds, questionIds, aiAnswerIds, podcastIds, userIds, progressIds] = await Promise.all([
+        this.getLastSyncTimestamp(),
+        kv.get<string[]>(`${this.prefix}subjects:list`),
+        kv.get<string[]>(`${this.prefix}questions:list`),
+        kv.get<string[]>(`${this.prefix}ai-answers:list`),
+        kv.get<string[]>(`${this.prefix}podcasts:list`),
+        kv.get<string[]>(`${this.prefix}users:list`),
+        kv.get<string[]>(`${this.prefix}progress:list`)
+      ]);
+
+      return {
+        lastSync,
+        dataVersion: '2.0.0', // Increment when data structure changes
+        totalRecords: {
+          subjects: (subjectIds || []).length,
+          questions: (questionIds || []).length,
+          aiAnswers: (aiAnswerIds || []).length,
+          podcasts: (podcastIds || []).length,
+          users: (userIds || []).length,
+          progressRecords: (progressIds || []).length
+        }
+      };
+    }, 'getGlobalState');
+  }
+
+  // Ensure global lists are initialized
+  async initializeGlobalLists(): Promise<void> {
+    return this.executeWithRetry(async () => {
+      const lists = [
+        `${this.prefix}subjects:list`,
+        `${this.prefix}questions:list`,
+        `${this.prefix}ai-answers:list`,
+        `${this.prefix}podcasts:list`,
+        `${this.prefix}users:list`,
+        `${this.prefix}progress:list`
+      ];
+
+      for (const listKey of lists) {
+        const existingList = await kv.get<string[]>(listKey);
+        if (!existingList) {
+          await kv.set(listKey, []);
+        }
+      }
+
+      // Set initial sync timestamp if not exists
+      const lastSync = await this.getLastSyncTimestamp();
+      if (!lastSync) {
+        await kv.set(`${this.prefix}last_update`, new Date().toISOString());
+      }
+    }, 'initializeGlobalLists');
+  }
+
+  // Rebuild global lists from existing data (data recovery)
+  async rebuildGlobalLists(): Promise<{
+    rebuilt: {
+      subjects: number;
+      questions: number;
+      aiAnswers: number;
+      podcasts: number;
+      users: number;
+      progressRecords: number;
+    };
+    errors: string[];
+  }> {
+    return this.executeWithRetry(async () => {
+      const errors: string[] = [];
+      const rebuilt = {
+        subjects: 0,
+        questions: 0,
+        aiAnswers: 0,
+        podcasts: 0,
+        users: 0,
+        progressRecords: 0
+      };
+
+      try {
+        // This would require scanning all keys - implementation depends on your KV provider
+        // For now, we'll just initialize empty lists
+        await this.initializeGlobalLists();
+        console.log('✅ Global lists initialized (rebuild from scan not implemented)');
+      } catch (error) {
+        errors.push(`Failed to rebuild global lists: ${error}`);
+      }
+
+      return { rebuilt, errors };
+    }, 'rebuildGlobalLists');
+  }
+
+  // Export all data for backup/migration
+  async exportAllData(): Promise<{
+    subjects: any[];
+    questions: any[];
+    aiAnswers: any[];
+    podcasts: any[];
+    users: any[];
+    progressRecords: any[];
+    metadata: {
+      exportDate: string;
+      dataVersion: string;
+      totalRecords: number;
+    };
+  }> {
+    return this.executeWithRetry(async () => {
+      const [subjectIds, questionIds, aiAnswerIds, podcastIds, userIds, progressIds] = await Promise.all([
+        kv.get<string[]>(`${this.prefix}subjects:list`),
+        kv.get<string[]>(`${this.prefix}questions:list`),
+        kv.get<string[]>(`${this.prefix}ai-answers:list`),
+        kv.get<string[]>(`${this.prefix}podcasts:list`),
+        kv.get<string[]>(`${this.prefix}users:list`),
+        kv.get<string[]>(`${this.prefix}progress:list`)
+      ]);
+
+      // Fetch all subjects
+      const subjects = [];
+      for (const subjectId of (subjectIds || [])) {
+        const subject = await kv.get(`${this.prefix}subject:${subjectId}`);
+        if (subject) subjects.push(subject);
+      }
+
+      // Fetch all questions
+      const questions = [];
+      for (const questionId of (questionIds || [])) {
+        const question = await kv.get(`${this.prefix}question:${questionId}`);
+        if (question) questions.push(question);
+      }
+
+      // Fetch all AI answers
+      const aiAnswers = [];
+      for (const questionId of (aiAnswerIds || [])) {
+        const aiAnswer = await kv.get(`${this.prefix}ai-answer:${questionId}`);
+        if (aiAnswer) aiAnswers.push(aiAnswer);
+      }
+
+      // Fetch all podcasts
+      const podcasts = [];
+      for (const questionId of (podcastIds || [])) {
+        const podcast = await kv.get(`${this.prefix}podcast:${questionId}`);
+        if (podcast) podcasts.push(podcast);
+      }
+
+      // Fetch all users
+      const users = [];
+      for (const userId of (userIds || [])) {
+        const user = await kv.get(`${this.prefix}user:${userId}`);
+        if (user) users.push(user);
+      }
+
+      // Fetch all progress records
+      const progressRecords = [];
+      for (const progressId of (progressIds || [])) {
+        const progress = await kv.get(`${this.prefix}progress:${progressId}`);
+        if (progress) progressRecords.push(progress);
+      }
+
+      const totalRecords = subjects.length + questions.length + aiAnswers.length + 
+                          podcasts.length + users.length + progressRecords.length;
+
+      return {
+        subjects,
+        questions,
+        aiAnswers,
+        podcasts,
+        users,
+        progressRecords,
+        metadata: {
+          exportDate: new Date().toISOString(),
+          dataVersion: '2.0.0',
+          totalRecords
+        }
+      };
+    }, 'exportAllData');
+  }
+
+  // ...existing code...
 }
 
 export default DatabaseService;

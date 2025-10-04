@@ -139,3 +139,25 @@
     border: 1px solid #ddd !important;
   }
 }
+
+/* Global Animation Classes */
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.animate-spin {
+  animation: spin 1s linear infinite;
+}
+
+/* Global State Monitor Styles */
+.global-state-monitor {
+  position: fixed;
+  top: 16px;
+  right: 16px;
+  z-index: 1000;
+}

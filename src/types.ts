@@ -7,6 +7,7 @@ export interface Subject {
   createdAt: string;
   updatedAt: string;
   isPredicted?: boolean;
+  color?: string;
 }
 
 export interface Section {
