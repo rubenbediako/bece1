@@ -98,3 +98,83 @@ export interface PredictedTopic {
   isActive: boolean;
   createdAt: string;
 }
+
+// AI Answer Generation Types
+export interface AIAnswerRequest {
+  question: string;
+  subject: 'social-studies' | 'rme' | 'english';
+  marks: number;
+  difficulty: 'easy' | 'medium' | 'hard';
+  context?: string;
+}
+
+export interface AIAnswer {
+  id: string;
+  questionId: string;
+  marks: number;
+  answerType: 'detailed-essay' | 'complete-sentences' | 'structured-response';
+  content: string;
+  paragraphs: string[];
+  keyPoints: string[];
+  conclusion?: string;
+  createdAt: string;
+  generatedBy: 'ai';
+}
+
+// Podcast Conversation Types
+export interface PodcastCharacter {
+  name: string;
+  role: 'student' | 'teacher';
+  gender: 'male' | 'female';
+  voice?: string;
+}
+
+export interface PodcastDialogue {
+  id: string;
+  character: PodcastCharacter;
+  text: string;
+  timestamp?: number;
+  order: number;
+}
+
+export interface PodcastConversation {
+  id: string;
+  questionId: string;
+  answerId: string;
+  title: string;
+  duration?: number;
+  dialogues: PodcastDialogue[];
+  characters: {
+    student: PodcastCharacter;
+    teacher: PodcastCharacter;
+  };
+  audioUrl?: string;
+  transcript: string;
+  createdAt: string;
+  status: 'generating' | 'ready' | 'error';
+}
+
+// Enhanced Question Solution with AI
+export interface EnhancedQuestionSolution extends QuestionSolution {
+  aiAnswer?: AIAnswer;
+  podcastConversation?: PodcastConversation;
+  answerQuality: 'basic' | 'detailed' | 'comprehensive';
+  hasAudioNarration?: boolean;
+}
+
+// Subject-specific answer templates
+export interface AnswerTemplate {
+  subject: string;
+  marksRange: {
+    min: number;
+    max: number;
+  };
+  structure: {
+    introduction: boolean;
+    bodyParagraphs: number;
+    conclusion: boolean;
+    examples: boolean;
+    references: boolean;
+  };
+  guidelines: string[];
+}

@@ -28,9 +28,9 @@ import {
   Switch
 } from '@mui/material';
 import { motion } from 'framer-motion';
-import { Plus, Edit, Trash2, ChevronDown, BookOpen, Calculator, Volume2, Mic, Play } from 'lucide-react';
-import type { Subject, Topic, Question, QuestionSolution } from '../types';
-import PodcastGenerator from './PodcastGenerator';
+import { Plus, Edit, Trash2, ChevronDown, BookOpen, Calculator, Brain } from 'lucide-react';
+import type { Subject, Topic, Question } from '../types';
+import AIQuestionSolutionDialog from './AIQuestionSolutionDialog';
 
 interface QuestionManagerProps {
   subjects: Subject[];
@@ -50,7 +50,8 @@ const QuestionManager: React.FC<QuestionManagerProps> = ({
   const [selectedSubject, setSelectedSubject] = useState('');
   const [expandedAccordion, setExpandedAccordion] = useState<string | false>(false);
   const [showMathEditor, setShowMathEditor] = useState(false);
-  const [showPodcastGenerator, setShowPodcastGenerator] = useState(false);
+  const [aiSolutionQuestion, setAiSolutionQuestion] = useState<Question | null>(null);
+  const [showAISolution, setShowAISolution] = useState(false);
 
   const [formData, setFormData] = useState({
     subjectId: '',
@@ -60,7 +61,6 @@ const QuestionManager: React.FC<QuestionManagerProps> = ({
     options: ['', '', '', ''],
     correctAnswer: '',
     explanation: '',
-    solution: undefined as QuestionSolution | undefined,
     difficulty: 'medium' as Question['difficulty'],
     points: 1,
     marks: undefined as number | undefined,
@@ -69,21 +69,19 @@ const QuestionManager: React.FC<QuestionManagerProps> = ({
 
   const handleOpen = (question?: Question) => {
     if (question) {
-      setEditingQuestion(question);
-      setFormData({
-        subjectId: question.subjectId,
-        topicId: question.topicId,
-        question: question.question,
-        type: question.type,
-        options: question.options || ['', '', '', ''],
-        correctAnswer: question.correctAnswer,
-        explanation: question.explanation || '',
-        solution: question.solution,
-        difficulty: question.difficulty,
-        points: question.points,
-        marks: question.marks,
-        isPredicted: question.isPredicted || false
-      });
+      setEditingQuestion(question);        setFormData({
+          subjectId: question.subjectId,
+          topicId: question.topicId,
+          question: question.question,
+          type: question.type,
+          options: question.options || ['', '', '', ''],
+          correctAnswer: question.correctAnswer,
+          explanation: question.explanation || '',
+          difficulty: question.difficulty,
+          points: question.points,
+          marks: question.marks,
+          isPredicted: question.isPredicted || false
+        });
     } else {
       setEditingQuestion(null);
       setFormData({
@@ -94,7 +92,6 @@ const QuestionManager: React.FC<QuestionManagerProps> = ({
         options: ['', '', '', ''],
         correctAnswer: '',
         explanation: '',
-        solution: undefined,
         difficulty: 'medium',
         points: 1,
         marks: undefined,
@@ -108,10 +105,9 @@ const QuestionManager: React.FC<QuestionManagerProps> = ({
     setOpen(false);
     setEditingQuestion(null);
     setShowMathEditor(false);
-    setShowPodcastGenerator(false);
   };
 
-  const handleSave = () => {
+  const handleSave = async () => {
     if (!formData.subjectId || !formData.topicId || !formData.question.trim() || 
         !formData.correctAnswer.trim()) {
       alert('Please fill in all required fields (Subject, Topic, Question, and Correct Answer)');
@@ -123,7 +119,6 @@ const QuestionManager: React.FC<QuestionManagerProps> = ({
     const questionData = {
       ...formData,
       explanation: formData.explanation || undefined,
-      solution: formData.solution || undefined,
       marks: formData.marks || undefined,
       options: formData.type === 'multiple-choice' ? formData.options.filter(opt => opt.trim()) : undefined
     };
@@ -189,18 +184,6 @@ const QuestionManager: React.FC<QuestionManagerProps> = ({
     return acc;
   }, {});
 
-  const handleOpenPodcastGenerator = () => {
-    setShowPodcastGenerator(true);
-  };
-
-  const handleSaveSolution = (solution: QuestionSolution) => {
-    setFormData(prev => ({
-      ...prev,
-      solution
-    }));
-    setShowPodcastGenerator(false);
-  };
-
   return (
     <Box>
       <Paper elevation={1} sx={{ p: 3, mb: 4, backgroundColor: 'primary.main', color: 'white' }}>
@@ -208,7 +191,7 @@ const QuestionManager: React.FC<QuestionManagerProps> = ({
           📝 Question Management
         </Typography>
         <Typography variant="h6" sx={{ opacity: 0.9 }}>
-          Create and manage questions with detailed solutions
+          Create and manage questions with AI-generated solutions
         </Typography>
       </Paper>
 
@@ -298,15 +281,6 @@ const QuestionManager: React.FC<QuestionManagerProps> = ({
                                 {question.marks && (
                                   <Chip label={`${question.marks} marks`} size="small" variant="outlined" color="info" />
                                 )}
-                                {question.solution?.hasPodcast && (
-                                  <Chip 
-                                    icon={<Volume2 size={14} />}
-                                    label="Audio" 
-                                    size="small" 
-                                    color="success" 
-                                    variant="outlined"
-                                  />
-                                )}
                                 {question.isPredicted && (
                                   <Chip 
                                     label="🔮 PREDICTED" 
@@ -318,6 +292,32 @@ const QuestionManager: React.FC<QuestionManagerProps> = ({
                                 )}
                               </Stack>
                               <Box>
+                                {/* AI Solution Button for eligible subjects */}
+                                {['social-studies', 'rme', 'english'].includes(question.subjectId) && (
+                                  <>
+                                    <IconButton 
+                                      onClick={() => {
+                                        setAiSolutionQuestion(question);
+                                        setShowAISolution(true);
+                                      }} 
+                                      size="small"
+                                      color="primary"
+                                      title="View AI Solution"
+                                    >
+                                      <Brain size={16} />
+                                    </IconButton>
+                                    {question.marks && question.marks >= 4 && (
+                                      <Chip 
+                                        icon={<Brain size={12} />}
+                                        label={question.marks >= 12 ? "6-Para Essay" : "Full Sentences"} 
+                                        size="small" 
+                                        color="primary" 
+                                        variant="outlined"
+                                        sx={{ ml: 1 }}
+                                      />
+                                    )}
+                                  </>
+                                )}
                                 <IconButton onClick={() => { handleOpen(question); }} size="small">
                                   <Edit size={16} />
                                 </IconButton>
@@ -366,46 +366,36 @@ const QuestionManager: React.FC<QuestionManagerProps> = ({
                               </>
                             )}
 
-                            {question.solution && (
-                              <>
-                                <Typography variant="subtitle2" color="secondary" gutterBottom sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                                  <BookOpen size={16} />
-                                  Solution:
-                                  {question.solution.hasPodcast && (
-                                    <Chip 
-                                      icon={<Volume2 size={14} />} 
-                                      label="Audio Available" 
-                                      color="success" 
-                                      size="small"
-                                    />
-                                  )}
-                                </Typography>
-                                
-                                {question.solution.textSolution && (
-                                  <Typography variant="body2" sx={{ whiteSpace: 'pre-line', mb: 2 }}>
-                                    {question.solution.textSolution}
-                                  </Typography>
-                                )}
-
-                                {question.solution.hasPodcast && (
-                                  <Paper sx={{ p: 2, bgcolor: 'success.50', border: 1, borderColor: 'success.200' }}>
-                                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-                                      <Volume2 size={20} color="#2e7d32" />
-                                      <Box sx={{ flexGrow: 1 }}>
-                                        <Typography variant="subtitle2" color="success.dark">
-                                          Audio Solution Available
-                                        </Typography>
-                                        <Typography variant="caption" color="text.secondary">
-                                          Duration: {Math.floor((question.solution.podcastDuration || 0) / 60)}:{((question.solution.podcastDuration || 0) % 60).toString().padStart(2, '0')}
-                                        </Typography>
-                                      </Box>
-                                      <Button size="small" startIcon={<Play />} variant="outlined" color="success">
-                                        Play
-                                      </Button>
-                                    </Box>
-                                  </Paper>
-                                )}
-                              </>
+                            {/* AI Solution Indicator */}
+                            {['social-studies', 'rme', 'english'].includes(question.subjectId) && question.marks && question.marks >= 4 && (
+                              <Paper sx={{ p: 2, bgcolor: 'primary.50', border: 1, borderColor: 'primary.200', mt: 2 }}>
+                                <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                                  <Brain size={20} color="#1976d2" />
+                                  <Box sx={{ flexGrow: 1 }}>
+                                    <Typography variant="subtitle2" color="primary.dark">
+                                      {question.marks >= 12 ? 'AI 6-Paragraph Essay Available' : 'AI Full Sentence Answers Available'}
+                                    </Typography>
+                                    <Typography variant="caption" color="text.secondary">
+                                      {question.marks >= 12 
+                                        ? `Comprehensive essay with introduction, 4 body paragraphs, and conclusion (${question.marks} marks)`
+                                        : `Complete sentence answers and podcast conversation (${question.marks} marks)`
+                                      }
+                                    </Typography>
+                                  </Box>
+                                  <Button 
+                                    size="small" 
+                                    startIcon={<Brain />} 
+                                    variant="outlined" 
+                                    color="primary"
+                                    onClick={() => {
+                                      setAiSolutionQuestion(question);
+                                      setShowAISolution(true);
+                                    }}
+                                  >
+                                    View Solution
+                                  </Button>
+                                </Box>
+                              </Paper>
                             )}
 
                             {question.marks && (
@@ -653,64 +643,6 @@ const QuestionManager: React.FC<QuestionManagerProps> = ({
                 placeholder="Brief explanation of why this is the correct answer (optional)"
               />
             )}
-
-            {/* Enhanced Solution with Podcast */}
-            <Box>
-              <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1 }}>
-                <Typography variant="subtitle1">
-                  Solution (Optional)
-                </Typography>
-                <Button
-                  variant="outlined"
-                  startIcon={<Volume2 />}
-                  onClick={handleOpenPodcastGenerator}
-                  color="secondary"
-                  size="small"
-                >
-                  {formData.solution?.hasPodcast ? 'Edit Solution & Podcast' : 'Add Solution & Generate Podcast'}
-                </Button>
-              </Box>
-
-              {formData.solution ? (
-                <Paper sx={{ p: 2, bgcolor: 'grey.50' }}>
-                  <Stack spacing={2}>
-                    {formData.solution.textSolution && (
-                      <Box>
-                        <Typography variant="caption" color="text.secondary">
-                          Text Solution:
-                        </Typography>
-                        <Typography variant="body2">
-                          {formData.solution.textSolution.substring(0, 200)}
-                          {formData.solution.textSolution.length > 200 ? '...' : ''}
-                        </Typography>
-                      </Box>
-                    )}
-                    
-                    {formData.solution.hasPodcast && (
-                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                        <Chip 
-                          icon={<Mic size={16} />} 
-                          label="Audio Podcast Available" 
-                          color="success" 
-                          size="small"
-                        />
-                        <Chip 
-                          label={`${Math.floor((formData.solution.podcastDuration || 0) / 60)}:${((formData.solution.podcastDuration || 0) % 60).toString().padStart(2, '0')}`} 
-                          variant="outlined" 
-                          size="small"
-                        />
-                      </Box>
-                    )}
-                  </Stack>
-                </Paper>
-              ) : (
-                <Paper sx={{ p: 3, bgcolor: 'grey.50', textAlign: 'center' }}>
-                  <Typography variant="body2" color="text.secondary">
-                    No solution added yet. Click "Add Solution & Generate Podcast" to create enhanced solutions with audio explanations.
-                  </Typography>
-                </Paper>
-              )}
-            </Box>
           </Stack>
         </DialogContent>
         <DialogActions>
@@ -721,14 +653,17 @@ const QuestionManager: React.FC<QuestionManagerProps> = ({
         </DialogActions>
       </Dialog>
 
-      {/* Podcast Generator Dialog */}
-      <PodcastGenerator
-        open={showPodcastGenerator}
-        onClose={() => setShowPodcastGenerator(false)}
-        onSave={handleSaveSolution}
-        existingSolution={formData.solution}
-        questionText={formData.question}
-      />
+      {/* AI Solution Dialog */}
+      {showAISolution && aiSolutionQuestion && (
+        <AIQuestionSolutionDialog
+          question={aiSolutionQuestion}
+          subject={subjects.find(s => s.id === aiSolutionQuestion.subjectId)!}
+          onClose={() => {
+            setShowAISolution(false);
+            setAiSolutionQuestion(null);
+          }}
+        />
+      )}
     </Box>
   );
 };

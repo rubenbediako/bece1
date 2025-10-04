@@ -16,7 +16,7 @@ dev.log
 .next
 out
 build
-dist
+# dist - Keep this for Vite deployment
 
 # IDE files
 .vscode
