@@ -522,10 +522,19 @@ const StudentView: React.FC<StudentViewProps> = ({
             </Button>
             <Button
               variant="outlined"
-              onClick={handlePlayPodcast}
+              onClick={() => {
+                // For essay questions from eligible subjects, use AI solution
+                if (selectedQuestion.type === 'essay' && ['social-studies', 'rme', 'english'].includes(selectedQuestion.subjectId)) {
+                  setShowAISolution(true);
+                } else {
+                  handlePlayPodcast();
+                }
+              }}
               startIcon={<Play />}
             >
-              Play Podcast Explanation
+              {selectedQuestion.type === 'essay' && ['social-studies', 'rme', 'english'].includes(selectedQuestion.subjectId) 
+                ? 'View AI Solution & Podcast' 
+                : 'Play Podcast Explanation'}
             </Button>
           </Box>
 
@@ -653,8 +662,9 @@ const StudentView: React.FC<StudentViewProps> = ({
                     🎯 Study Tip
                   </Typography>
                   <Typography variant="body1">
-                    For better understanding, try the podcast conversation above! Listen to AMA (student) and DAS (teacher) 
-                    discuss this question in detail. It's like having a study buddy explain the solution to you.
+                    {selectedQuestion.type === 'essay' && ['social-studies', 'rme', 'english'].includes(selectedQuestion.subjectId) 
+                      ? 'Use the AI Solution above to get a comprehensive answer with an interactive podcast conversation between Student Serwaa and Teacher Das!' 
+                      : 'For better understanding, try the podcast conversation above! Listen to detailed explanations that help clarify the solution.'}
                   </Typography>
                 </CardContent>
               </Card>
@@ -677,8 +687,9 @@ const StudentView: React.FC<StudentViewProps> = ({
         </CardContent>
       </Card>
 
-      {/* Podcast Conversation */}
-      {showPodcast && (
+      {/* Podcast Conversation - Only for non-essay questions */}
+      {showPodcast && selectedQuestion && 
+       !(selectedQuestion.type === 'essay' && ['social-studies', 'rme', 'english'].includes(selectedQuestion.subjectId)) && (
         <PodcastConversation 
           question={{
             id: selectedQuestion.id,

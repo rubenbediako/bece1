@@ -78,7 +78,14 @@ export const AIQuestionSolutionDialog: React.FC<Props> = ({ question, subject, o
     setIsGenerating(true);
     try {
       // First check if we already have a cached AI answer
-      const cachedAnswer = await aiAnswerAPI.get(question.id);
+      let cachedAnswer = null;
+      try {
+        cachedAnswer = await aiAnswerAPI.get(question.id);
+      } catch (dbError) {
+        console.warn('Database error when fetching cached answer, continuing with generation:', dbError);
+        // Continue without database - generate fresh answer
+      }
+      
       if (cachedAnswer) {
         setAiAnswer(cachedAnswer);
         return;
@@ -96,10 +103,18 @@ export const AIQuestionSolutionDialog: React.FC<Props> = ({ question, subject, o
       const generatedAnswer = await aiService.generateAnswer(aiAnswerRequest);
       setAiAnswer(generatedAnswer);
       
-      // Save to database for future use
-      await aiAnswerAPI.save(question.id, generatedAnswer);
+      // Try to save to database, but don't fail if database is unavailable
+      try {
+        await aiAnswerAPI.save(question.id, generatedAnswer);
+        console.log('AI answer saved successfully to database');
+      } catch (dbError) {
+        console.warn('Database not available for saving AI answer - proceeding without cache:', dbError);
+        // This is fine - the answer will still work, just won't be cached
+      }
     } catch (error) {
       console.error('Error generating AI answer:', error);
+      // Show user-friendly error
+      alert(`Failed to generate AI answer: ${error instanceof Error ? error.message : 'Unknown error'}. Please try again.`);
     } finally {
       setIsGenerating(false);
     }
@@ -141,6 +156,7 @@ export const AIQuestionSolutionDialog: React.FC<Props> = ({ question, subject, o
         cachedPodcast = await podcastAPI.get(question.id);
       } catch (dbError) {
         console.warn('Database error when fetching cached podcast, continuing with generation:', dbError);
+        // Continue without database - generate fresh podcast
       }
       
       if (cachedPodcast) {
@@ -163,14 +179,14 @@ export const AIQuestionSolutionDialog: React.FC<Props> = ({ question, subject, o
 
       setPodcastConversation(conversation);
       
-      // Save to database for future use
-      console.log('Saving conversation to database...');
+      // Try to save to database, but don't fail if database is unavailable
+      console.log('Attempting to save conversation to database...');
       try {
         await podcastAPI.save(question.id, conversation);
-        console.log('Conversation saved successfully');
+        console.log('Conversation saved successfully to database');
       } catch (dbError) {
-        console.warn('Database error when saving conversation, but conversation is still available:', dbError);
-        // Don't fail the entire operation if database save fails
+        console.warn('Database not available for saving conversation - proceeding without cache:', dbError);
+        // This is fine - the conversation will still work, just won't be cached
       }
     } catch (error) {
       console.error('Error generating podcast conversation:', error);
@@ -182,8 +198,9 @@ export const AIQuestionSolutionDialog: React.FC<Props> = ({ question, subject, o
         questionText: question.question
       });
       
-      // Show user-friendly error
-      alert(`Failed to generate podcast conversation: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      // Show user-friendly error with more context
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
+      alert(`Failed to generate podcast conversation: ${errorMessage}. This might be due to a temporary service issue. Please try again.`);
     } finally {
       setIsGeneratingPodcast(false);
     }
