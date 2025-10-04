@@ -4,6 +4,8 @@ import type { Subject, Question, User, AIAnswer, PodcastConversation, StudentPro
 export class DatabaseService {
   private static instance: DatabaseService;
   private readonly prefix = 'bece_2026_';
+  private isInitialized = false;
+  private initializationError: Error | null = null;
 
   private constructor() {
     this.initializeDatabase();
@@ -16,19 +18,63 @@ export class DatabaseService {
     return DatabaseService.instance;
   }
 
+  // Check if database is properly configured
+  private isDatabaseConfigured(): boolean {
+    // In production, check if we're on Vercel and KV should be available
+    if (typeof window !== 'undefined') {
+      const hostname = window.location.hostname;
+      const isProduction = hostname.includes('vercel.app') || hostname.includes('vercel.com');
+      const isLocal = hostname === 'localhost' || hostname === '127.0.0.1';
+      
+      // For local development, we might not have KV configured
+      if (isLocal) {
+        console.warn('🔶 Running locally - database operations may fail if KV is not configured');
+        return true; // Allow operations but expect failures
+      }
+      
+      // For production, KV should be configured
+      return isProduction;
+    }
+    
+    return true; // Default to allowing operations
+  }
+
   // Initialize database connection and setup
   private async initializeDatabase(): Promise<void> {
     try {
+      if (!this.isDatabaseConfigured()) {
+        throw new Error('Database not configured for this environment');
+      }
+
       // Test connection
       await this.healthCheck();
+      this.isInitialized = true;
+      this.initializationError = null;
       console.log('✅ Database initialized successfully');
     } catch (error) {
+      this.initializationError = error as Error;
       console.error('❌ Database initialization failed:', error);
+      
+      // Provide helpful error messages
+      if (error instanceof Error) {
+        if (error.message.includes('fetch')) {
+          console.error('💡 This might be due to missing Vercel KV configuration');
+          console.error('💡 Please ensure KV_REST_API_URL and KV_REST_API_TOKEN are set in Vercel');
+        }
+      }
     }
   }
 
-  // Health check with retry mechanism
-  async healthCheck(): Promise<{status: 'ok' | 'error', timestamp: string, version?: string}> {
+  // Get initialization status
+  public getInitializationStatus(): { initialized: boolean; error: Error | null } {
+    return {
+      initialized: this.isInitialized,
+      error: this.initializationError
+    };
+  }
+
+  // Health check with retry mechanism and better error reporting
+  async healthCheck(): Promise<{status: 'ok' | 'error', timestamp: string, version?: string, error?: string}> {
     const maxRetries = 3;
     let lastError: any;
 
@@ -51,11 +97,21 @@ export class DatabaseService {
             version: '1.0.0' 
           };
         } else {
-          throw new Error('Health check data not found');
+          throw new Error('Health check data not found after write');
         }
       } catch (error) {
         lastError = error;
         console.warn(`Database health check attempt ${attempt}/${maxRetries} failed:`, error);
+        
+        // Provide specific error information
+        if (error instanceof Error) {
+          if (error.message.includes('fetch')) {
+            console.error('🔥 Database connection failed - this usually means:');
+            console.error('   1. Vercel KV is not configured');
+            console.error('   2. KV_REST_API_URL and KV_REST_API_TOKEN environment variables are missing');
+            console.error('   3. Your Vercel project does not have the KV addon enabled');
+          }
+        }
         
         if (attempt < maxRetries) {
           // Wait before retry (exponential backoff)
@@ -64,16 +120,33 @@ export class DatabaseService {
       }
     }
 
-    console.error('Database health check failed after all retries:', lastError);
-    return { status: 'error', timestamp: new Date().toISOString() };
+    console.error('🔥 Database health check failed after all retries:', lastError);
+    return { 
+      status: 'error', 
+      timestamp: new Date().toISOString(), 
+      error: lastError instanceof Error ? lastError.message : 'Unknown error'
+    };
   }
 
-  // Enhanced operation wrapper with retry mechanism
+  // Enhanced operation wrapper with retry mechanism and fallback handling
   private async executeWithRetry<T>(
     operation: () => Promise<T>,
     operationName: string,
-    maxRetries: number = 2
+    maxRetries: number = 2,
+    fallbackValue?: T
   ): Promise<T> {
+    // If database wasn't initialized properly, provide helpful error
+    if (this.initializationError) {
+      console.error(`🔥 ${operationName} failed: Database not initialized`, this.initializationError.message);
+      
+      if (fallbackValue !== undefined) {
+        console.warn(`🔶 Using fallback value for ${operationName}`);
+        return fallbackValue;
+      }
+      
+      throw new Error(`Database not available: ${this.initializationError.message}`);
+    }
+
     let lastError: any;
 
     for (let attempt = 1; attempt <= maxRetries; attempt++) {
@@ -83,6 +156,14 @@ export class DatabaseService {
         lastError = error;
         console.warn(`${operationName} attempt ${attempt}/${maxRetries} failed:`, error);
         
+        // Provide specific guidance for common errors
+        if (error instanceof Error) {
+          if (error.message.includes('fetch')) {
+            console.error(`🔥 ${operationName} failed due to database connection issues`);
+            console.error('💡 Please check Vercel KV configuration in your deployment');
+          }
+        }
+        
         if (attempt < maxRetries) {
           // Wait before retry
           await new Promise(resolve => setTimeout(resolve, 1000 * attempt));
@@ -90,8 +171,15 @@ export class DatabaseService {
       }
     }
 
-    console.error(`${operationName} failed after ${maxRetries} attempts:`, lastError);
-    throw lastError;
+    console.error(`🔥 ${operationName} failed after ${maxRetries} attempts:`, lastError);
+    
+    // If a fallback value is provided, use it instead of throwing
+    if (fallbackValue !== undefined) {
+      console.warn(`🔶 Using fallback value for ${operationName} due to database error`);
+      return fallbackValue;
+    }
+    
+    throw new Error(`${operationName} failed: ${lastError instanceof Error ? lastError.message : 'Unknown error'}`);
   }
 
   // Subject Management with global persistence
@@ -136,7 +224,7 @@ export class DatabaseService {
       }
       
       return subjects;
-    }, 'getAllSubjects');
+    }, 'getAllSubjects', 2, []); // Provide empty array as fallback
   }
 
   // Question Management with global persistence
@@ -188,7 +276,7 @@ export class DatabaseService {
       }
       
       return questions;
-    }, 'getAllQuestions');
+    }, 'getAllQuestions', 2, []); // Provide empty array as fallback
   }
 
   async getQuestionsBySubject(subjectId: string): Promise<Question[]> {

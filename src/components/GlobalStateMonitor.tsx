@@ -28,9 +28,11 @@ import {
   Storage,
   Info,
   Download,
-  Verified
+  Verified,
+  BugReport
 } from '@mui/icons-material';
 import { useGlobalState } from '../contexts/GlobalStateContext';
+import DatabaseDiagnostics from './DatabaseDiagnostics';
 
 const GlobalStateMonitor: React.FC = () => {
   const {
@@ -46,6 +48,7 @@ const GlobalStateMonitor: React.FC = () => {
   } = useGlobalState();
   
   const [showDetails, setShowDetails] = useState(false);
+  const [showDiagnostics, setShowDiagnostics] = useState(false);
   const [globalStateInfo, setGlobalStateInfo] = useState<any>(null);
   const [integrityResult, setIntegrityResult] = useState<any>(null);
   const [isExporting, setIsExporting] = useState(false);
@@ -328,6 +331,13 @@ const GlobalStateMonitor: React.FC = () => {
 
         <DialogActions>
           <Button 
+            onClick={() => setShowDiagnostics(true)}
+            startIcon={<BugReport />}
+            color="warning"
+          >
+            Database Diagnostics
+          </Button>
+          <Button 
             onClick={handleExportData}
             disabled={isExporting}
             startIcon={isExporting ? <Sync className="animate-spin" /> : <Download />}
@@ -346,6 +356,11 @@ const GlobalStateMonitor: React.FC = () => {
           </Button>
         </DialogActions>
       </Dialog>
+
+      {/* Database Diagnostics Dialog */}
+      {showDiagnostics && (
+        <DatabaseDiagnostics onClose={() => setShowDiagnostics(false)} />
+      )}
     </>
   );
 };
