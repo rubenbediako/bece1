@@ -1,9 +1,8 @@
 {
-  "version": 2,
+  "framework": "vite",
   "buildCommand": "npm run build",
   "outputDirectory": "dist",
-  "framework": "vite",
-  "installCommand": "npm ci",
+  "installCommand": "npm install --no-package-lock --legacy-peer-deps",
   "rewrites": [
     {
       "source": "/(.*)",
@@ -56,15 +55,8 @@
         {
           "key": "Referrer-Policy",
           "value": "strict-origin-when-cross-origin"
-        },
-        {
-          "key": "Permissions-Policy",
-          "value": "geolocation=(), microphone=(), camera=()"
         }
       ]
     }
-  ],
-  "env": {
-    "NODE_ENV": "production"
-  }
+  ]
 }

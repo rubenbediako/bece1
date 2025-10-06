@@ -131,6 +131,43 @@ npm run build
 npm run lint:fix
 ```
 
+#### **NPM CI Error (npm error Command "npm ci" exited with 1):**
+This is a common Vercel deployment issue. Try these solutions:
+
+**Solution 1: Update vercel.json**
+```json
+{
+  "framework": "vite", 
+  "installCommand": "npm install --legacy-peer-deps",
+  "buildCommand": "npm run build"
+}
+```
+
+**Solution 2: Add .npmrc file**
+```
+legacy-peer-deps=true
+fund=false
+audit=false
+```
+
+**Solution 3: Use simpler configuration**
+```json
+{
+  "framework": "vite",
+  "buildCommand": "npm run build",
+  "outputDirectory": "dist"
+}
+```
+
+**Solution 4: Manual dependency cleanup**
+```bash
+# In your local environment
+rm -rf node_modules package-lock.json
+npm install
+npm run build
+# Then redeploy
+```
+
 #### Environment Variables Not Working:
 - Ensure all variables start with `VITE_`
 - Check spelling and case sensitivity
