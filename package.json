@@ -22,7 +22,12 @@
     "lint:check": "eslint . --max-warnings 200",
     "preview": "vite preview",
     "prod": "npm run build && npm run preview",
-    "vercel-build": "npm run build:clean"
+    "vercel-build": "npm run build:clean",
+    "test-pwa": "./test-pwa.sh",
+    "analyze-bundle": "npm run build && npx vite-bundle-analyzer dist",
+    "serve": "npm run build && npx serve dist",
+    "firebase:init": "node scripts/init-firebase.js",
+    "firebase:emulator": "firebase emulators:start"
   },
   "engines": {
     "node": ">=18.0.0 <23.0.0",
@@ -37,6 +42,7 @@
     "@mui/system": "^7.3.3",
     "@vercel/kv": "^3.0.0",
     "axios": "^1.12.2",
+    "firebase": "^12.3.0",
     "framer-motion": "^12.23.22",
     "katex": "^0.16.22",
     "lucide-react": "^0.544.0",

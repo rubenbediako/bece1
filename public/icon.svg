@@ -1,0 +1,22 @@
+<!-- Simple SVG icon for BECE 2026 app -->
+<svg width="192" height="192" viewBox="0 0 192 192" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Background circle -->
+  <circle cx="96" cy="96" r="96" fill="#1976d2"/>
+  
+  <!-- Main container -->
+  <rect x="32" y="32" width="128" height="128" rx="16" fill="white"/>
+  
+  <!-- BECE Text -->
+  <text x="96" y="75" font-family="Arial, sans-serif" font-size="24" font-weight="bold" fill="#1976d2" text-anchor="middle">BECE</text>
+  
+  <!-- 2026 Text -->
+  <text x="96" y="100" font-family="Arial, sans-serif" font-size="18" font-weight="normal" fill="#666" text-anchor="middle">2026</text>
+  
+  <!-- AI symbol -->
+  <circle cx="96" cy="125" r="8" fill="#dc004e"/>
+  <text x="96" y="130" font-family="Arial, sans-serif" font-size="10" font-weight="bold" fill="white" text-anchor="middle">AI</text>
+  
+  <!-- Book icon -->
+  <rect x="75" y="140" width="42" height="6" rx="2" fill="#1976d2"/>
+  <rect x="75" y="148" width="42" height="6" rx="2" fill="#1976d2" opacity="0.7"/>
+</svg>
