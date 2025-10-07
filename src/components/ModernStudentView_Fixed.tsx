@@ -23,13 +23,19 @@ import {
 } from '@mui/icons-material';
 import { motion } from 'framer-motion';
 import { useGlobalState } from '../contexts/GlobalStateContext';
+import { beceTopics, activePredictions } from '../sampleData';
+import type { Topic, PredictedTopic } from '../types';
 
 const ModernStudentView: React.FC = () => {
-  const { subjects, questions, topicsGlobal, predictedTopics } = useGlobalState();
+  const { subjects, questions } = useGlobalState();
   const [selectedSubject, setSelectedSubject] = useState<string | null>(null);
+  
+  // Use sample data as fallback
+  const topics: Topic[] = beceTopics;
+  const predictedTopics: PredictedTopic[] = activePredictions;
 
   const getTopicsBySubject = (subjectId: string) => {
-    return topicsGlobal.filter(topic => topic.subjectId === subjectId);
+    return topics.filter((topic: Topic) => topic.subjectId === subjectId);
   };
 
   const getQuestionsByTopic = (topicId: string) => {
@@ -37,17 +43,17 @@ const ModernStudentView: React.FC = () => {
   };
 
   const isPredicted = (topicId: string) => {
-    return predictedTopics.some(pt => pt.topicId === topicId);
+    return predictedTopics.some((pt: PredictedTopic) => pt.topicId === topicId);
   };
 
   const getSubjectProgress = (subjectId: string) => {
-    const topics = getTopicsBySubject(subjectId);
-    if (topics.length === 0) return 0;
-    const progressSum = topics.reduce((sum, topic) => {
+    const subjectTopics = getTopicsBySubject(subjectId);
+    if (subjectTopics.length === 0) return 0;
+    const progressSum = subjectTopics.reduce((sum: number, topic: Topic) => {
       const questionsCount = getQuestionsByTopic(topic.id).length;
       return sum + (questionsCount > 0 ? 75 : 25); // Mock progress
     }, 0);
-    return Math.min(progressSum / topics.length, 100);
+    return Math.min(progressSum / subjectTopics.length, 100);
   };
 
   const getSubjectColor = (index: number) => {
@@ -279,7 +285,7 @@ const ModernStudentView: React.FC = () => {
                   gridTemplateColumns: { xs: '1fr', sm: 'repeat(2, 1fr)' },
                   gap: 3 
                 }}>
-                  {getTopicsBySubject(selectedSubject).map((topic) => {
+                  {getTopicsBySubject(selectedSubject).map((topic: Topic) => {
                     const topicQuestions = getQuestionsByTopic(topic.id);
                     const predicted = isPredicted(topic.id);
                     

@@ -19,7 +19,7 @@ import ModernStudentView from './components/ModernStudentView.tsx';
 import AuthPage from './components/AuthPage.tsx';
 import AppHeader from './components/AppHeader.tsx';
 import ModernAppHeader from './components/ModernAppHeader.tsx';
-import SimpleLandingPage from './components/SimpleLandingPage.tsx';
+import ModernLandingPageFixed from './components/ModernLandingPageFixed.tsx';
 import InitialSetup from './components/InitialSetup.tsx';
 import GlobalStateMonitor from './components/GlobalStateMonitor.tsx';
 import PWAInstallPrompt from './components/PWAInstallPrompt.tsx';
@@ -450,7 +450,7 @@ const FirebaseAppContent: React.FC = () => {
       <PWAStatus />
       <PWAInstallPrompt />
       <GlobalStateMonitor />
-      <SimpleLandingPage 
+      <ModernLandingPageFixed 
         onGetStarted={() => setShowStudentAuth(true)}
         onAdminLogin={() => setShowAdminAuth(true)}
       />
@@ -705,7 +705,7 @@ const AppContent: React.FC = () => {
       <PWAStatus />
       <PWAInstallPrompt />
       <GlobalStateMonitor />
-      <SimpleLandingPage 
+      <ModernLandingPageFixed 
         onGetStarted={() => setShowStudentAuth(true)}
         onAdminLogin={() => setShowAdminAuth(true)}
       />
