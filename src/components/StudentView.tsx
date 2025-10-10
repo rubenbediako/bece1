@@ -20,11 +20,13 @@ import {
   Calculator,
   Edit,
   Trash2,
+  Headphones,
 } from 'lucide-react';
 import { motion } from 'framer-motion';
 import type { Subject, Topic, Question, PredictedTopic } from '../types';
 import PodcastConversation from './PodcastConversation.tsx';
 import AIQuestionSolutionDialog from './AIQuestionSolutionDialog';
+import AudioSolutionDialog from './AudioSolutionDialog';
 
 interface StudentViewProps {
   subjects: Subject[];
@@ -132,6 +134,7 @@ const StudentView: React.FC<StudentViewProps> = ({
   const [showMathEditor, setShowMathEditor] = useState(false);
   const [showPodcast, setShowPodcast] = useState(false);
   const [showAISolution, setShowAISolution] = useState(false);
+  const [showAudioDialog, setShowAudioDialog] = useState(false);
 
   const getPredictedTopicsForSubject = (subjectId: string) => {
     return predictedTopics
@@ -693,23 +696,39 @@ const StudentView: React.FC<StudentViewProps> = ({
                         color="primary" 
                         size="small"
                       />
+                      <Chip 
+                        icon={<Headphones size={16} />}
+                        label="Audio Explanation" 
+                        color="secondary" 
+                        size="small"
+                      />
                     </Typography>
                     
-                    <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-                      Get a comprehensive AI-generated answer with interactive podcast conversation for this essay question.
+                    <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
+                      Get a comprehensive AI-generated answer with interactive podcast conversation and professional audio explanation for this essay question.
                     </Typography>
 
-                    <Button
-                      variant="contained"
-                      color="primary"
-                      onClick={() => setShowAISolution(true)}
-                      sx={{ mb: 2 }}
-                    >
-                      View AI Solution & Podcast
-                    </Button>
+                    <Box sx={{ display: 'flex', gap: 2, flexWrap: 'wrap' }}>
+                      <Button
+                        variant="contained"
+                        color="primary"
+                        onClick={() => setShowAISolution(true)}
+                      >
+                        View AI Solution & Podcast
+                      </Button>
+                      
+                      <Button
+                        variant="outlined"
+                        color="secondary"
+                        startIcon={<Headphones size={20} />}
+                        onClick={() => setShowAudioDialog(true)}
+                      >
+                        Audio Explanation
+                      </Button>
+                    </Box>
 
-                    <Typography variant="caption" display="block" color="text.secondary">
-                      ✨ Features: {(selectedQuestion.marks ?? selectedQuestion.points ?? 10) >= 12 ? '6-paragraph essay' : 'structured response'} + interactive teacher-student conversation
+                    <Typography variant="caption" display="block" color="text.secondary" sx={{ mt: 2 }}>
+                      ✨ Features: {(selectedQuestion.marks ?? selectedQuestion.points ?? 10) >= 12 ? '6-paragraph essay' : 'structured response'} + interactive teacher-student conversation + customizable audio explanation
                     </Typography>
                   </CardContent>
                 </Card>
@@ -821,6 +840,16 @@ const StudentView: React.FC<StudentViewProps> = ({
           question={selectedQuestion}
           subject={subjects.find(s => s.id === selectedQuestion.subjectId)!}
           onClose={() => setShowAISolution(false)}
+        />
+      )}
+
+      {/* Audio Solution Dialog */}
+      {showAudioDialog && selectedQuestion && (
+        <AudioSolutionDialog
+          question={selectedQuestion}
+          subject={subjects.find(s => s.id === selectedQuestion.subjectId)!}
+          open={showAudioDialog}
+          onClose={() => setShowAudioDialog(false)}
         />
       )}
     </Box>

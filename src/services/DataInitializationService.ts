@@ -1,5 +1,5 @@
 import { DatabaseService } from './DatabaseService';
-import type { Subject, Question } from '../types';
+import type { Subject } from '../types';
 
 export class DataInitializationService {
   private static instance: DataInitializationService;
@@ -13,7 +13,7 @@ export class DataInitializationService {
     return DataInitializationService.instance;
   }
 
-  // Initialize app with persistent default data across all devices
+  // Initialize app with basic structure only (no demo data)
   async initializeAppData(): Promise<void> {
     if (this.isInitialized) {
       console.log('📱 App data already initialized');
@@ -21,7 +21,7 @@ export class DataInitializationService {
     }
 
     try {
-      console.log('🚀 Initializing app data for global consistency...');
+      console.log('🚀 Initializing basic app structure...');
       
       // Check if data already exists
       const existingSubjects = await this.db.getAllSubjects();
@@ -31,22 +31,19 @@ export class DataInitializationService {
         return;
       }
 
-      // Initialize default subjects (consistent across all devices)
-      await this.initializeDefaultSubjects();
+      // Initialize only the basic subject structure (no demo questions)
+      await this.initializeBasicSubjects();
       
-      // Initialize default questions
-      await this.initializeDefaultQuestions();
-      
-      console.log('✅ App data initialized successfully - available on all devices');
+      console.log('✅ Basic app structure initialized - ready for content creation');
       this.isInitialized = true;
       
     } catch (error) {
-      console.error('❌ Failed to initialize app data:', error);
+      console.error('❌ Failed to initialize app structure:', error);
       throw error;
     }
   }
 
-  private async initializeDefaultSubjects(): Promise<void> {
+  private async initializeBasicSubjects(): Promise<void> {
     const subjects: Subject[] = [
       {
         id: 'mathematics',
@@ -92,6 +89,24 @@ export class DataInitializationService {
         topics: [],
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString(),
+      },
+      {
+        id: 'ghanaian-language',
+        name: 'Ghanaian Language',
+        description: 'Local language studies and cultural communication',
+        color: '#795548',
+        topics: [],
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+      },
+      {
+        id: 'french',
+        name: 'French',
+        description: 'French language learning and communication',
+        color: '#607D8B',
+        topics: [],
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
       }
     ];
 
@@ -99,123 +114,26 @@ export class DataInitializationService {
       await this.db.saveSubject(subject);
     }
 
-    console.log(`✅ Initialized ${subjects.length} default subjects`);
+    console.log(`✅ Initialized ${subjects.length} basic subjects (no demo content)`);
   }
 
-  private async initializeDefaultQuestions(): Promise<void> {
-    const defaultQuestions: Question[] = [
-      // Social Studies Essay Questions (AI-powered)
-      {
-        id: 'ss-essay-1',
-        topicId: 'ghana-independence',
-        subjectId: 'social-studies',
-        question: 'Discuss the factors that led to Ghana\'s independence and analyze their impact on modern Ghana.',
-        type: 'essay' as const,
-        correctAnswer: 'Multiple factors including nationalism, educated elite leadership, economic pressures, and international changes contributed to Ghana\'s independence.',
-        explanation: 'This question requires analysis of historical factors and their contemporary relevance.',
-        difficulty: 'hard' as const,
-        points: 15,
-        marks: 15,
-        tags: ['independence', 'history', 'nationalism'],
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
-        isPredicted: true
-      },
-      {
-        id: 'ss-essay-2',
-        topicId: 'economic-development',
-        subjectId: 'social-studies',
-        question: 'Evaluate the role of agriculture in Ghana\'s economic development and suggest ways to improve agricultural productivity.',
-        type: 'essay' as const,
-        correctAnswer: 'Agriculture remains crucial to Ghana\'s economy, providing employment and food security, but faces challenges that require modern solutions.',
-        explanation: 'Students should analyze both historical and contemporary aspects of Ghana\'s agricultural sector.',
-        difficulty: 'medium' as const,
-        points: 12,
-        marks: 12,
-        tags: ['agriculture', 'economy', 'development'],
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
-        isPredicted: true
-      },
-      
-      // RME Essay Questions (AI-powered)
-      {
-        id: 'rme-essay-1',
-        subjectId: 'rme',
-        topicId: 'moral-values',
-        question: 'Examine the importance of honesty in building trust within families and communities.',
-        type: 'essay' as const,
-        correctAnswer: 'Honesty is fundamental to building and maintaining trust, creating strong relationships, and establishing a harmonious society.',
-        explanation: 'This question explores the moral value of honesty and its practical applications.',
-        difficulty: 'medium' as const,
-        points: 12,
-        marks: 12,
-        tags: ['honesty', 'trust', 'values'],
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
-        isPredicted: true
-      },
-      
-      // English Essay Questions (AI-powered)
-      {
-        id: 'eng-essay-1',
-        subjectId: 'english',
-        topicId: 'essay-writing',
-        question: 'Write an essay on the topic: "The importance of education in personal development"',
-        type: 'essay' as const,
-        correctAnswer: 'Education is crucial for personal development as it enhances knowledge, skills, critical thinking, and opens opportunities for success.',
-        explanation: 'Students should demonstrate essay writing skills while exploring the value of education.',
-        difficulty: 'medium' as const,
-        points: 15,
-        marks: 15,
-        tags: ['education', 'personal development', 'essay'],
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
-        isPredicted: true
-      },
-      
-      // Non-essay questions for other subjects
-      {
-        id: 'math-1',
-        subjectId: 'mathematics',
-        topicId: 'algebra',
-        question: 'Solve for x: 2x + 5 = 15',
-        type: 'short-answer' as const,
-        correctAnswer: 'x = 5',
-        explanation: 'Subtract 5 from both sides, then divide by 2: 2x = 10, x = 5',
-        difficulty: 'easy' as const,
-        points: 3,
-        marks: 3,
-        tags: ['algebra', 'equations'],
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
-        isPredicted: true
-      },
-      
-      {
-        id: 'science-1',
-        subjectId: 'science',
-        topicId: 'physics',
-        question: 'What is the SI unit of force?',
-        type: 'multiple-choice' as const,
-        options: ['Joule', 'Newton', 'Watt', 'Pascal'],
-        correctAnswer: 'Newton',
-        explanation: 'The Newton (N) is the SI unit of force, named after Sir Isaac Newton.',
-        difficulty: 'easy' as const,
-        points: 2,
-        marks: 2,
-        tags: ['physics', 'units', 'force'],
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
-        isPredicted: true
-      }
-    ];
-
-    for (const question of defaultQuestions) {
-      await this.db.saveQuestion(question);
+  // Reset all data (for admin use)
+  async resetAllData(): Promise<void> {
+    try {
+      console.log('🔄 Resetting all app data...');
+      await this.db.clearAllData();
+      this.isInitialized = false;
+      await this.initializeAppData();
+      console.log('✅ All data reset and reinitialized');
+    } catch (error) {
+      console.error('❌ Failed to reset data:', error);
+      throw error;
     }
+  }
 
-    console.log(`✅ Initialized ${defaultQuestions.length} default questions`);
+  // Get initialization status
+  getInitializationStatus(): boolean {
+    return this.isInitialized;
   }
 
   // Sync status check

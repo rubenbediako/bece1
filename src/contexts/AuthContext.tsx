@@ -52,66 +52,15 @@ interface RegisterData {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-// Production users will be managed through registration
-// Added demo users for testing
-const initialUsers: User[] = [
-  {
-    id: 'admin-default',
-    username: 'dasexams',
-    email: 'dasexams@gmail.com',
-    role: 'admin',
-    fullName: 'DAS Exams Admin',
-    createdAt: new Date().toISOString()
-  },
-  {
-    id: 'admin-demo',
-    username: 'admin',
-    email: 'admin@bece2026.com',
-    role: 'admin',
-    fullName: 'Demo Administrator',
-    createdAt: new Date().toISOString()
-  },
-  {
-    id: 'student-demo',
-    username: 'student',
-    email: 'student@bece2026.com',
-    role: 'student',
-    fullName: 'Demo Student',
-    createdAt: new Date().toISOString()
-  },
-  {
-    id: 'teacher-demo',
-    username: 'teacher',
-    email: 'teacher@bece2026.com',
-    role: 'teacher',
-    fullName: 'Demo Teacher',
-    createdAt: new Date().toISOString()
-  }
-];
+// Production users - empty initially, users will be created through registration
+const initialUsers: User[] = [];
 
-// Production credentials - includes demo accounts for testing
-const userCredentials: { email: string; password: string }[] = [
-  {
-    email: 'dasexams@gmail.com',
-    password: '123456'
-  },
-  {
-    email: 'admin@bece2026.com',
-    password: 'admin123'
-  },
-  {
-    email: 'student@bece2026.com',
-    password: 'student123'
-  },
-  {
-    email: 'teacher@bece2026.com',
-    password: 'teacher123'
-  }
-];
+// Production credentials - empty initially, credentials will be added during registration
+const userCredentials: { email: string; password: string }[] = [];
 
-// Access code management - starts with demo code for testing
-let currentAccessCode = 'BECE2026';
-const accessCodeHistory: string[] = ['BECE2026'];
+// Access code management - empty initially, admin will generate codes as needed
+let currentAccessCode = '';
+const accessCodeHistory: string[] = [];
 
 // Access code expiration tracking (8 months validity)
 interface AccessCodeWithExpiry {
@@ -157,25 +106,16 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       } else {
         // Code expired, remove from storage
         localStorage.removeItem('beceAccessCodeExpiry');
-        currentAccessCode = 'BECE2026'; // Reset to demo code
+        currentAccessCode = '';
         currentAccessCodeWithExpiry = null;
       }
     }
 
-    // Initialize demo access code if none exists or create expiry for demo code
-    if (!currentAccessCode || currentAccessCode === 'BECE2026') {
-      if (!currentAccessCodeWithExpiry || currentAccessCodeWithExpiry.code !== 'BECE2026') {
-        // Set up demo code with 8 months expiry
-        const now = new Date();
-        const expiryDate = new Date(now.getTime() + (8 * 30 * 24 * 60 * 60 * 1000)); // 8 months
-        currentAccessCode = 'BECE2026';
-        currentAccessCodeWithExpiry = {
-          code: 'BECE2026',
-          createdAt: now,
-          expiresAt: expiryDate
-        };
-        localStorage.setItem('beceAccessCodeExpiry', JSON.stringify(currentAccessCodeWithExpiry));
-      }
+    // Generate initial access code if none exists (admin will need to generate codes)
+    if (!currentAccessCode) {
+      // Don't auto-generate - wait for admin to create first code
+      currentAccessCode = '';
+      currentAccessCodeWithExpiry = null;
     }
   }, []);
 
@@ -267,17 +207,22 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     localStorage.removeItem('beceUser');
   };
 
+  const hasUsers = (): boolean => {
+    return users.length > 0 || initialUsers.length > 0;
+  };
+
   const createInitialAdmin = async (adminData: {
     email: string;
     password: string;
     fullName: string;
     username: string;
   }): Promise<boolean> => {
-    // Simulate API call delay
-    await new Promise(resolve => setTimeout(resolve, 1000));
+    // Only allow if no users exist yet
+    if (hasUsers()) {
+      return false;
+    }
 
-    // Create initial admin user
-    const adminUser: User = {
+    const newAdmin: User = {
       id: `admin-${Date.now()}`,
       username: adminData.username,
       email: adminData.email,
@@ -286,25 +231,20 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       createdAt: new Date().toISOString()
     };
 
-    // Add to users list and credentials
-    setUsers([adminUser]);
-    userCredentials.push({ 
-      email: adminData.email, 
-      password: adminData.password 
+    // Add to credentials
+    userCredentials.push({
+      email: adminData.email,
+      password: adminData.password
     });
 
-    // Auto-login the admin
-    setUser(adminUser);
-    localStorage.setItem('beceUser', JSON.stringify(adminUser));
+    // Add to users
+    setUsers([newAdmin]);
     
-    // Generate initial access code
-    generateAccessCode();
-
+    // Auto-login the new admin
+    setUser(newAdmin);
+    localStorage.setItem('beceUser', JSON.stringify(newAdmin));
+    
     return true;
-  };
-
-  const hasUsers = (): boolean => {
-    return users.length > 0 || initialUsers.length > 0;
   };
 
   const generateAccessCode = (): string => {

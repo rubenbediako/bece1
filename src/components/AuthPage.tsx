@@ -48,8 +48,8 @@ const AuthPage: React.FC<AuthPageProps> = ({ adminMode = false, onBack }) => {
 
   // Login form state
   const [loginForm, setLoginForm] = useState({
-    email: adminMode ? 'admin@bece2026.com' : '',
-    password: adminMode ? 'admin123' : '',
+    email: '',
+    password: '',
     accessCode: '',
     userType: (adminMode ? 'admin' : 'student') as 'admin' | 'student'
   });
@@ -61,7 +61,7 @@ const AuthPage: React.FC<AuthPageProps> = ({ adminMode = false, onBack }) => {
     password: '',
     confirmPassword: '',
     fullName: '',
-    role: (adminMode ? 'admin' : 'student') as 'admin' | 'student'
+    role: (adminMode ? 'admin' : 'student') as 'admin' | 'student' | 'teacher'
   });
 
   const handleTabChange = (_: React.SyntheticEvent, newValue: number) => {
@@ -183,102 +183,14 @@ const AuthPage: React.FC<AuthPageProps> = ({ adminMode = false, onBack }) => {
           {/* WhatsApp Contact for Access Code */}
           <Box sx={{ p: 3, bgcolor: 'rgba(37, 211, 102, 0.1)', borderBottom: 1, borderColor: 'rgba(37, 211, 102, 0.3)' }}>
             <Typography variant="subtitle2" sx={{ color: '#25D366', fontWeight: 'bold', mb: 1 }}>
-              📱 Need Access Code? WhatsApp Us!
-            </Typography>
-            <Typography variant="h6" sx={{ color: '#25D366', fontWeight: 'bold', mb: 1 }}>
-              054045614
+              📱 Need Access Code? Contact Your School Administrator
             </Typography>
             <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-              Get instant access codes and technical support
+              Students need a valid access code from their teacher or school administrator to register and access the platform.
             </Typography>
-            <Button
-              size="small"
-              variant="contained"
-              sx={{ 
-                bgcolor: '#25D366', 
-                '&:hover': { bgcolor: '#128C7E' },
-                color: 'white'
-              }}
-              href="https://wa.me/233540456149?text=Hi! I need an access code for BECE 2026 Prediction Platform"
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              💬 Get Code on WhatsApp
-            </Button>
-          </Box>
-
-          {/* Demo Credentials Section */}
-          <Box sx={{ p: 3, bgcolor: 'rgba(33, 150, 243, 0.1)', borderBottom: 1, borderColor: 'rgba(33, 150, 243, 0.3)' }}>
-            <Typography variant="subtitle2" sx={{ color: '#1976d2', fontWeight: 'bold', mb: 1 }}>
-              🧪 Demo Credentials for Testing
+            <Typography variant="body2" color="text.secondary" sx={{ fontStyle: 'italic' }}>
+              If you're a teacher or administrator, please log in to generate access codes for your students.
             </Typography>
-            <Box sx={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 2, fontSize: '0.875rem' }}>
-              <Box>
-                <Typography variant="body2" sx={{ fontWeight: 'bold', color: '#1976d2' }}>Admin Login:</Typography>
-                <Typography variant="body2">📧 admin@bece2026.com</Typography>
-                <Typography variant="body2">🔐 admin123</Typography>
-                <Button
-                  size="small"
-                  variant="outlined"
-                  onClick={() => {
-                    setLoginForm({
-                      email: 'admin@bece2026.com',
-                      password: 'admin123',
-                      accessCode: '',
-                      userType: 'admin'
-                    });
-                    setTabValue(0);
-                  }}
-                  sx={{ mt: 1, color: '#1976d2', borderColor: '#1976d2' }}
-                >
-                  Quick Fill
-                </Button>
-              </Box>
-              <Box>
-                <Typography variant="body2" sx={{ fontWeight: 'bold', color: '#1976d2' }}>Teacher Login:</Typography>
-                <Typography variant="body2">📧 teacher@bece2026.com</Typography>
-                <Typography variant="body2">🔐 teacher123</Typography>
-                <Typography variant="body2">🎫 Access Code: BECE2026</Typography>
-                <Button
-                  size="small"
-                  variant="outlined"
-                  onClick={() => {
-                    setLoginForm({
-                      email: 'teacher@bece2026.com',
-                      password: 'teacher123',
-                      accessCode: 'BECE2026',
-                      userType: 'student'
-                    });
-                    setTabValue(0);
-                  }}
-                  sx={{ mt: 1, color: '#1976d2', borderColor: '#1976d2' }}
-                >
-                  Quick Fill
-                </Button>
-              </Box>
-              <Box>
-                <Typography variant="body2" sx={{ fontWeight: 'bold', color: '#1976d2' }}>Student Login:</Typography>
-                <Typography variant="body2">📧 student@bece2026.com</Typography>
-                <Typography variant="body2">🔐 student123</Typography>
-                <Typography variant="body2">🎫 Access Code: BECE2026</Typography>
-                <Button
-                  size="small"
-                  variant="outlined"
-                  onClick={() => {
-                    setLoginForm({
-                      email: 'student@bece2026.com',
-                      password: 'student123',
-                      accessCode: 'BECE2026',
-                      userType: 'student'
-                    });
-                    setTabValue(0);
-                  }}
-                  sx={{ mt: 1, color: '#1976d2', borderColor: '#1976d2' }}
-                >
-                  Quick Fill
-                </Button>
-              </Box>
-            </Box>
           </Box>
 
           <CardContent sx={{ p: 0 }}>

@@ -157,10 +157,52 @@ export interface PodcastConversation {
   status: 'generating' | 'ready' | 'error';
 }
 
-// Enhanced Question Solution with AI
+// Audio Solution Types
+export interface AudioSolutionConfig {
+  voice: {
+    rate: number;
+    pitch: number;
+    volume: number;
+    language: string;
+  };
+  style: 'teacher' | 'student' | 'expert' | 'conversational';
+  includeIntroduction: boolean;
+  includeStepByStep: boolean;
+  includeConclusion: boolean;
+  duration: 'short' | 'medium' | 'detailed';
+}
+
+export interface AudioExplanation {
+  id: string;
+  questionId: string;
+  title: string;
+  sections: AudioSection[];
+  totalDuration: number;
+  transcript: string;
+  audioUrl?: string;
+  createdAt: string;
+  config: AudioSolutionConfig;
+}
+
+export interface AudioSection {
+  id: string;
+  title: string;
+  content: string;
+  duration: number;
+  voiceConfig: {
+    rate: number;
+    pitch: number;
+    volume: number;
+    voice?: string;
+  };
+  order: number;
+}
+
+// Enhanced Question Solution with AI Audio
 export interface EnhancedQuestionSolution extends QuestionSolution {
   aiAnswer?: AIAnswer;
   podcastConversation?: PodcastConversation;
+  audioExplanation?: AudioExplanation;
   answerQuality: 'basic' | 'detailed' | 'comprehensive';
   hasAudioNarration?: boolean;
 }

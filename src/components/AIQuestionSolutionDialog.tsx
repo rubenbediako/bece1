@@ -28,11 +28,13 @@ import {
   Pause,
   Download,
   School,
-  Psychology
+  Psychology,
+  Headphones
 } from '@mui/icons-material';
 import type { Question, AIAnswer, PodcastConversation, PodcastDialogue, Subject } from '../types';
 import { AIAnswerService } from '../services/AIAnswerService';
 import { aiAnswerAPI, podcastAPI } from '../api/database';
+import AudioSolutionDialog from './AudioSolutionDialog';
 
 interface Props {
   question: Question;
@@ -65,6 +67,7 @@ export const AIQuestionSolutionDialog: React.FC<Props> = ({ question, subject, o
   const [playbackInterval, setPlaybackInterval] = useState<number | null>(null);
   const [speechSynthesis, setSpeechSynthesis] = useState<SpeechSynthesis | null>(null);
   const [currentUtterance, setCurrentUtterance] = useState<SpeechSynthesisUtterance | null>(null);
+  const [showAudioDialog, setShowAudioDialog] = useState(false);
 
   const aiService = AIAnswerService.getInstance();
 
@@ -451,6 +454,11 @@ export const AIQuestionSolutionDialog: React.FC<Props> = ({ question, subject, o
                 label="Podcast Conversation" 
                 disabled={!aiAnswer} 
               />
+              <Tab 
+                icon={<Headphones />} 
+                label="Audio Explanation" 
+                disabled={!aiAnswer} 
+              />
             </Tabs>
 
             <TabPanel value={tabValue} index={0}>
@@ -673,6 +681,27 @@ export const AIQuestionSolutionDialog: React.FC<Props> = ({ question, subject, o
                 </Box>
               )}
             </TabPanel>
+
+            <TabPanel value={tabValue} index={2}>
+              <Box textAlign="center">
+                <Typography variant="h6" gutterBottom>
+                  AI Audio Explanation
+                </Typography>
+                <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
+                  Get a comprehensive audio explanation with customizable voice settings and teaching style
+                </Typography>
+                
+                <Button
+                  startIcon={<Headphones />}
+                  onClick={() => setShowAudioDialog(true)}
+                  variant="contained"
+                  size="large"
+                  color="secondary"
+                >
+                  Open Audio Explanation
+                </Button>
+              </Box>
+            </TabPanel>
           </>
         )}
       </DialogContent>
@@ -680,6 +709,15 @@ export const AIQuestionSolutionDialog: React.FC<Props> = ({ question, subject, o
       <DialogActions>
         <Button onClick={onClose}>Close</Button>
       </DialogActions>
+
+      {/* Audio Solution Dialog */}
+      <AudioSolutionDialog
+        question={question}
+        subject={subject}
+        aiAnswer={aiAnswer || undefined}
+        open={showAudioDialog}
+        onClose={() => setShowAudioDialog(false)}
+      />
     </Dialog>
   );
 };
