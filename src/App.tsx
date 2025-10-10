@@ -1,5 +1,7 @@
 import { ThemeProvider, createTheme, CssBaseline } from '@mui/material';
 import SimpleWorkingApp from './components/SimpleWorkingApp';
+import { AppProvider } from './contexts/AppContext';
+import { AuthProvider } from './contexts/AuthContext';
 
 const theme = createTheme({
   palette: {
@@ -18,10 +20,14 @@ const theme = createTheme({
 
 function App() {
   return (
-    <ThemeProvider theme={theme}>
-      <CssBaseline />
-      <SimpleWorkingApp />
-    </ThemeProvider>
+    <AuthProvider>
+      <AppProvider>
+        <ThemeProvider theme={theme}>
+          <CssBaseline />
+          <SimpleWorkingApp />
+        </ThemeProvider>
+      </AppProvider>
+    </AuthProvider>
   );
 }
 

@@ -48,10 +48,10 @@ const AuthPage: React.FC<AuthPageProps> = ({ adminMode = false, onBack }) => {
 
   // Login form state
   const [loginForm, setLoginForm] = useState({
-    email: '',
-    password: '',
+    email: adminMode ? 'admin@bece2026.com' : '',
+    password: adminMode ? 'admin123' : '',
     accessCode: '',
-    userType: 'student' as 'admin' | 'student'
+    userType: (adminMode ? 'admin' : 'student') as 'admin' | 'student'
   });
 
   // Registration form state
@@ -61,7 +61,7 @@ const AuthPage: React.FC<AuthPageProps> = ({ adminMode = false, onBack }) => {
     password: '',
     confirmPassword: '',
     fullName: '',
-    role: 'student' as 'admin' | 'student'
+    role: (adminMode ? 'admin' : 'student') as 'admin' | 'student'
   });
 
   const handleTabChange = (_: React.SyntheticEvent, newValue: number) => {
@@ -205,6 +205,26 @@ const AuthPage: React.FC<AuthPageProps> = ({ adminMode = false, onBack }) => {
             >
               💬 Get Code on WhatsApp
             </Button>
+          </Box>
+
+          {/* Demo Credentials Section */}
+          <Box sx={{ p: 3, bgcolor: 'rgba(33, 150, 243, 0.1)', borderBottom: 1, borderColor: 'rgba(33, 150, 243, 0.3)' }}>
+            <Typography variant="subtitle2" sx={{ color: '#1976d2', fontWeight: 'bold', mb: 1 }}>
+              🧪 Demo Credentials for Testing
+            </Typography>
+            <Box sx={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 2, fontSize: '0.875rem' }}>
+              <Box>
+                <Typography variant="body2" sx={{ fontWeight: 'bold', color: '#1976d2' }}>Admin Login:</Typography>
+                <Typography variant="body2">📧 admin@bece2026.com</Typography>
+                <Typography variant="body2">🔐 admin123</Typography>
+              </Box>
+              <Box>
+                <Typography variant="body2" sx={{ fontWeight: 'bold', color: '#1976d2' }}>Student Login:</Typography>
+                <Typography variant="body2">📧 student@bece2026.com</Typography>
+                <Typography variant="body2">🔐 student123</Typography>
+                <Typography variant="body2">🎫 Access Code: BECE2026</Typography>
+              </Box>
+            </Box>
           </Box>
 
           <CardContent sx={{ p: 0 }}>

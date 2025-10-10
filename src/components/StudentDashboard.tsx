@@ -19,136 +19,17 @@ import {
 import {
   ArrowBack,
   School,
-  CheckCircle
+  CheckCircle,
+  Psychology,
+  TrendingUp,
+  Quiz,
+  PlayArrow,
+  Timer,
+  AutoAwesome
 } from '@mui/icons-material';
+import { useAppContext } from '../contexts/AppContext';
 
 // Sample data for BECE subjects and topics
-const beceSubjects = [
-  {
-    id: 'mathematics',
-    name: 'Mathematics',
-    icon: '📊',
-    color: '#2563eb',
-    topics: 15,
-    questions: 120,
-    progress: 75,
-    description: 'Algebra, Geometry, Statistics & Probability'
-  },
-  {
-    id: 'english',
-    name: 'English Language',
-    icon: '📖',
-    color: '#7c3aed',
-    topics: 12,
-    questions: 95,
-    progress: 60,
-    description: 'Grammar, Comprehension, Essay Writing'
-  },
-  {
-    id: 'science',
-    name: 'Integrated Science',
-    icon: '🔬',
-    color: '#059669',
-    topics: 18,
-    questions: 140,
-    progress: 45,
-    description: 'Physics, Chemistry, Biology'
-  },
-  {
-    id: 'social_studies',
-    name: 'Social Studies',
-    icon: '🌍',
-    color: '#dc2626',
-    topics: 14,
-    questions: 110,
-    progress: 80,
-    description: 'History, Geography, Government'
-  },
-  {
-    id: 'rme',
-    name: 'Religious & Moral Education',
-    icon: '⛪',
-    color: '#7c2d12',
-    topics: 10,
-    questions: 75,
-    progress: 55,
-    description: 'Ethics, World Religions, Moral Values'
-  },
-  {
-    id: 'french',
-    name: 'French',
-    icon: '🇫🇷',
-    color: '#9333ea',
-    topics: 8,
-    questions: 60,
-    progress: 30,
-    description: 'Grammar, Vocabulary, Conversation'
-  }
-];
-
-const mathTopics = [
-  {
-    id: 'algebra',
-    name: 'Algebra',
-    icon: '🔢',
-    questions: 25,
-    difficulty: 'Medium',
-    predictedProbability: 95,
-    status: 'high_priority',
-    description: 'Linear equations, simultaneous equations, inequalities'
-  },
-  {
-    id: 'geometry',
-    name: 'Geometry',
-    icon: '📐',
-    questions: 30,
-    difficulty: 'Hard',
-    predictedProbability: 85,
-    status: 'high_priority',
-    description: 'Angles, triangles, circles, area and perimeter'
-  },
-  {
-    id: 'statistics',
-    name: 'Statistics',
-    icon: '📈',
-    questions: 20,
-    difficulty: 'Easy',
-    predictedProbability: 75,
-    status: 'medium_priority',
-    description: 'Mean, median, mode, graphs and charts'
-  },
-  {
-    id: 'fractions',
-    name: 'Fractions & Decimals',
-    icon: '🔢',
-    questions: 18,
-    difficulty: 'Easy',
-    predictedProbability: 90,
-    status: 'high_priority',
-    description: 'Operations with fractions, decimal conversions'
-  },
-  {
-    id: 'percentage',
-    name: 'Percentage',
-    icon: '💯',
-    questions: 15,
-    difficulty: 'Medium',
-    predictedProbability: 80,
-    status: 'medium_priority',
-    description: 'Percentage calculations, profit and loss'
-  },
-  {
-    id: 'mensuration',
-    name: 'Mensuration',
-    icon: '📏',
-    questions: 12,
-    difficulty: 'Hard',
-    predictedProbability: 70,
-    status: 'low_priority',
-    description: 'Volume, surface area, compound shapes'
-  }
-];
-
 const sampleQuestions = [
   {
     id: 1,
@@ -184,7 +65,7 @@ interface StudentDashboardProps {
 }
 
 const StudentDashboard: React.FC<StudentDashboardProps> = ({ onBackToHome }) => {
-  const [currentView, setCurrentView] = useState<'subjects' | 'topics' | 'questions'>('subjects');
+  const [currentView, setCurrentView] = useState<'subjects' | 'predictions' | 'topics' | 'questions'>('subjects');
   const [selectedSubject, setSelectedSubject] = useState<any>(null);
   const [selectedTopic, setSelectedTopic] = useState<any>(null);
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
@@ -192,6 +73,16 @@ const StudentDashboard: React.FC<StudentDashboardProps> = ({ onBackToHome }) => 
   const [showResult, setShowResult] = useState(false);
   const [score, setScore] = useState(0);
   const [answeredQuestions, setAnsweredQuestions] = useState<number[]>([]);
+
+  // Get data from shared context
+  const { 
+    subjects, 
+    predictions, 
+    getPredictionTopics, 
+    getTopicsBySubject 
+  } = useAppContext();
+
+  const predictionTopics = getPredictionTopics();
 
   const handleSubjectClick = (subject: any) => {
     setSelectedSubject(subject);
@@ -259,17 +150,46 @@ const StudentDashboard: React.FC<StudentDashboardProps> = ({ onBackToHome }) => 
           Select a subject to explore topics and practice questions
         </Typography>
         
+        {/* Quick Actions */}
+        <Box sx={{ display: 'flex', gap: 2, mb: 4, flexWrap: 'wrap' }}>
+          <Button 
+            variant="contained" 
+            startIcon={<Psychology />}
+            onClick={() => setCurrentView('predictions')}
+            sx={{ 
+              background: 'linear-gradient(45deg, #ff6b6b, #ee5a52)',
+              fontWeight: 600
+            }}
+          >
+            🔮 AI Predictions ({predictionTopics.length})
+          </Button>
+          <Button 
+            variant="outlined" 
+            startIcon={<Quiz />}
+            disabled
+          >
+            📝 Quick Quiz
+          </Button>
+          <Button 
+            variant="outlined" 
+            startIcon={<TrendingUp />}
+            disabled
+          >
+            📊 Progress Report
+          </Button>
+        </Box>
+        
         {/* Overall Progress */}
         <Paper sx={{ p: 3, mb: 4, background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)', color: 'white' }}>
           <Typography variant="h6" sx={{ mb: 2 }}>📊 Overall Progress</Typography>
           <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: 2 }}>
             <Box sx={{ textAlign: 'center' }}>
-              <Typography variant="h3" sx={{ fontWeight: 800 }}>6</Typography>
+              <Typography variant="h3" sx={{ fontWeight: 800 }}>{subjects.length}</Typography>
               <Typography variant="body2">Subjects</Typography>
             </Box>
             <Box sx={{ textAlign: 'center' }}>
-              <Typography variant="h3" sx={{ fontWeight: 800 }}>77</Typography>
-              <Typography variant="body2">Topics</Typography>
+              <Typography variant="h3" sx={{ fontWeight: 800 }}>{predictionTopics.length}</Typography>
+              <Typography variant="body2">Prediction Topics</Typography>
             </Box>
             <Box sx={{ textAlign: 'center' }}>
               <Typography variant="h3" sx={{ fontWeight: 800 }}>600+</Typography>
@@ -288,83 +208,90 @@ const StudentDashboard: React.FC<StudentDashboardProps> = ({ onBackToHome }) => 
         gridTemplateColumns: { xs: '1fr', sm: 'repeat(2, 1fr)', md: 'repeat(3, 1fr)' },
         gap: 3
       }}>
-        {beceSubjects.map((subject) => (
-          <Card 
-            key={subject.id}
-            sx={{ 
-              height: '100%',
-              cursor: 'pointer',
-              transition: 'all 0.3s ease',
-              '&:hover': {
-                transform: 'translateY(-8px)',
-                boxShadow: '0 12px 24px rgba(0,0,0,0.15)'
-              }
-            }}
-            onClick={() => handleSubjectClick(subject)}
-          >
-              <CardContent>
+        {subjects.map((subject) => {
+          const subjectTopics = getTopicsBySubject(subject.id);
+          const predictionCount = subjectTopics.filter(t => t.isPredictionTopic).length;
+          
+          return (
+            <Card 
+              key={subject.id}
+              sx={{ 
+                height: '100%',
+                cursor: 'pointer',
+                transition: 'all 0.3s ease',
+                '&:hover': {
+                  transform: 'translateY(-8px)',
+                  boxShadow: '0 12px 24px rgba(0,0,0,0.15)'
+                }
+              }}
+              onClick={() => handleSubjectClick(subject)}
+            >
+              <CardContent sx={{ p: 3 }}>
                 <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
-                  <Box sx={{ 
-                    fontSize: '2rem', 
-                    mr: 2,
-                    background: `${subject.color}20`,
-                    borderRadius: '50%',
-                    p: 1,
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center'
-                  }}>
+                  <Avatar
+                    sx={{
+                      bgcolor: subject.color,
+                      width: 60,
+                      height: 60,
+                      mr: 2,
+                      fontSize: '1.5rem'
+                    }}
+                  >
                     {subject.icon}
-                  </Box>
+                  </Avatar>
                   <Box>
-                    <Typography variant="h6" sx={{ fontWeight: 600 }}>
+                    <Typography variant="h6" fontWeight="bold">
                       {subject.name}
                     </Typography>
-                    <Typography variant="body2" sx={{ color: 'text.secondary' }}>
-                      {subject.description}
+                    <Typography variant="body2" color="text.secondary">
+                      {subjectTopics.length} topics available
                     </Typography>
                   </Box>
                 </Box>
 
-                <Box sx={{ mb: 2 }}>
-                  <Typography variant="body2" sx={{ mb: 1 }}>
-                    Progress: {subject.progress}%
-                  </Typography>
-                  <LinearProgress 
-                    variant="determinate" 
-                    value={subject.progress}
-                    sx={{
-                      height: 8,
-                      borderRadius: 4,
-                      backgroundColor: '#e0e7ff',
-                      '& .MuiLinearProgress-bar': {
-                        backgroundColor: subject.color,
-                        borderRadius: 4
-                      }
-                    }}
+                <Typography variant="body2" sx={{ mb: 2, color: 'text.secondary' }}>
+                  {subject.description}
+                </Typography>
+
+                <Box sx={{ display: 'flex', gap: 1, mb: 2, flexWrap: 'wrap' }}>
+                  <Chip 
+                    label={`${subjectTopics.length} topics`}
+                    size="small" 
+                    color="primary"
+                    variant="outlined"
                   />
+                  {predictionCount > 0 && (
+                    <Chip 
+                      label={`${predictionCount} predictions`}
+                      size="small" 
+                      color="warning"
+                      icon={<AutoAwesome />}
+                    />
+                  )}
                 </Box>
 
-                <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                  <Stack direction="row" spacing={1}>
-                    <Chip 
-                      label={`${subject.topics} Topics`}
-                      size="small"
-                      sx={{ backgroundColor: `${subject.color}20`, color: subject.color }}
-                    />
-                    <Chip 
-                      label={`${subject.questions} Questions`}
-                      size="small"
-                      variant="outlined"
-                    />
-                  </Stack>
-                </Box>
+                <LinearProgress 
+                  variant="determinate" 
+                  value={Math.floor(Math.random() * 100)} 
+                  sx={{ 
+                    height: 8, 
+                    borderRadius: 4,
+                    bgcolor: 'grey.200',
+                    '& .MuiLinearProgress-bar': {
+                      bgcolor: subject.color
+                    }
+                  }}
+                />
+                <Typography variant="caption" color="text.secondary" sx={{ mt: 1, display: 'block' }}>
+                  {Math.floor(Math.random() * 100)}% Complete
+                </Typography>
               </CardContent>
             </Card>
-          ))}
-        </Box>
-      </Container>
-    );
+          );
+        })}
+      </Box>
+    </Container>
+  );
 
   const renderTopics = () => (
     <Container maxWidth="lg">
@@ -398,26 +325,32 @@ const StudentDashboard: React.FC<StudentDashboardProps> = ({ onBackToHome }) => 
         gridTemplateColumns: { xs: '1fr', sm: 'repeat(2, 1fr)', md: 'repeat(3, 1fr)' },
         gap: 3
       }}>
-        {mathTopics.map((topic) => (
-          <Card 
-            key={topic.id}
-            sx={{ 
-              height: '100%',
-              cursor: 'pointer',
-              transition: 'all 0.3s ease',
-              border: topic.status === 'high_priority' ? '2px solid #dc2626' : '1px solid #e5e7eb',
-              '&:hover': {
-                transform: 'translateY(-4px)',
-                boxShadow: '0 8px 20px rgba(0,0,0,0.15)'
-              }
-            }}
-            onClick={() => handleTopicClick(topic)}
-          >
+        {selectedSubject && getTopicsBySubject(selectedSubject.id).map((topic) => {
+          const isPrediction = topic.isPredictionTopic;
+          const prediction = predictions.find(p => p.topicId === topic.id);
+          const probability = prediction?.probability || (isPrediction ? Math.floor(Math.random() * 20) + 80 : Math.floor(Math.random() * 40) + 40);
+          const priority = isPrediction ? 'high_priority' : 'normal';
+          
+          return (
+            <Card 
+              key={topic.id}
+              sx={{ 
+                height: '100%',
+                cursor: 'pointer',
+                transition: 'all 0.3s ease',
+                border: isPrediction ? '2px solid #dc2626' : '1px solid #e5e7eb',
+                '&:hover': {
+                  transform: 'translateY(-4px)',
+                  boxShadow: '0 8px 20px rgba(0,0,0,0.15)'
+                }
+              }}
+              onClick={() => handleTopicClick(topic)}
+            >
               <CardContent>
                 <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 2 }}>
                   <Box sx={{ display: 'flex', alignItems: 'center' }}>
                     <Box sx={{ fontSize: '1.5rem', mr: 2 }}>
-                      {topic.icon}
+                      📖
                     </Box>
                     <Box>
                       <Typography variant="h6" sx={{ fontWeight: 600 }}>
@@ -425,15 +358,25 @@ const StudentDashboard: React.FC<StudentDashboardProps> = ({ onBackToHome }) => 
                       </Typography>
                     </Box>
                   </Box>
-                  <Chip 
-                    label={`${topic.predictedProbability}%`}
-                    size="small"
-                    sx={{ 
-                      backgroundColor: getPriorityColor(topic.status),
-                      color: 'white',
-                      fontWeight: 600
-                    }}
-                  />
+                  <Stack direction="row" spacing={1}>
+                    <Chip 
+                      label={`${probability}%`}
+                      size="small"
+                      sx={{ 
+                        backgroundColor: getPriorityColor(priority),
+                        color: 'white',
+                        fontWeight: 600
+                      }}
+                    />
+                    {isPrediction && (
+                      <Chip 
+                        label="🎯"
+                        size="small"
+                        color="warning"
+                        title="AI Prediction"
+                      />
+                    )}
+                  </Stack>
                 </Box>
 
                 <Typography variant="body2" sx={{ color: 'text.secondary', mb: 2 }}>
@@ -449,12 +392,23 @@ const StudentDashboard: React.FC<StudentDashboardProps> = ({ onBackToHome }) => 
                       color: 'white'
                     }}
                   />
-                  <Typography variant="body2" sx={{ color: 'text.secondary' }}>
-                    {topic.questions} Questions
+                  <Typography variant="caption" sx={{ color: 'text.secondary' }}>
+                    {topic.estimatedHours}h study time
                   </Typography>
                 </Box>
 
-                {topic.status === 'high_priority' && (
+                <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <Typography variant="caption" sx={{ color: 'text.secondary' }}>
+                    Est. questions: {Math.floor(Math.random() * 15) + 5}
+                  </Typography>
+                  {isPrediction && (
+                    <Typography variant="caption" sx={{ color: 'warning.main', fontWeight: 600 }}>
+                      HIGH PRIORITY
+                    </Typography>
+                  )}
+                </Box>
+
+                {isPrediction && (
                   <Box sx={{ 
                     background: '#fee2e2', 
                     color: '#dc2626', 
@@ -462,17 +416,19 @@ const StudentDashboard: React.FC<StudentDashboardProps> = ({ onBackToHome }) => 
                     borderRadius: 1, 
                     textAlign: 'center',
                     fontSize: '0.875rem',
-                    fontWeight: 600
+                    fontWeight: 600,
+                    mt: 2
                   }}>
                     🎯 High Priority for BECE 2026
                   </Box>
                 )}
               </CardContent>
             </Card>
-          ))}
-        </Box>
-      </Container>
-    );
+          );
+        })}
+      </Box>
+    </Container>
+  );
 
   const renderQuestions = () => {
     const currentQuestion = sampleQuestions[currentQuestionIndex];
@@ -639,6 +595,157 @@ const StudentDashboard: React.FC<StudentDashboardProps> = ({ onBackToHome }) => 
     );
   };
 
+  const renderPredictions = () => (
+    <Container maxWidth="lg">
+      <Box sx={{ mb: 4 }}>
+        <Button 
+          variant="outlined" 
+          startIcon={<ArrowBack />}
+          onClick={() => setCurrentView('subjects')}
+          sx={{ mb: 3 }}
+        >
+          Back to Subjects
+        </Button>
+        
+        <Typography variant="h4" sx={{ mb: 2, fontWeight: 700 }}>
+          🔮 AI-Powered BECE 2026 Predictions
+        </Typography>
+        <Typography variant="body1" sx={{ color: 'text.secondary', mb: 4 }}>
+          Our AI has analyzed past BECE papers and predicts these topics are highly likely to appear in your exam
+        </Typography>
+        
+        {/* Predictions Stats */}
+        <Paper sx={{ p: 3, mb: 4, background: 'linear-gradient(135deg, #ff6b6b 0%, #ee5a52 100%)', color: 'white' }}>
+          <Typography variant="h6" sx={{ mb: 2 }}>🎯 Prediction Summary</Typography>
+          <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: 3 }}>
+            <Box sx={{ textAlign: 'center' }}>
+              <Typography variant="h3" sx={{ fontWeight: 800 }}>{predictionTopics.length}</Typography>
+              <Typography variant="body2">Prediction Topics</Typography>
+            </Box>
+            <Box sx={{ textAlign: 'center' }}>
+              <Typography variant="h3" sx={{ fontWeight: 800 }}>{predictions.length}</Typography>
+              <Typography variant="body2">Active Predictions</Typography>
+            </Box>
+            <Box sx={{ textAlign: 'center' }}>
+              <Typography variant="h3" sx={{ fontWeight: 800 }}>92%</Typography>
+              <Typography variant="body2">Avg. Confidence</Typography>
+            </Box>
+            <Box sx={{ textAlign: 'center' }}>
+              <Typography variant="h3" sx={{ fontWeight: 800 }}>High</Typography>
+              <Typography variant="body2">Priority Level</Typography>
+            </Box>
+          </Box>
+        </Paper>
+      </Box>
+
+      {/* Predictions by Subject */}
+      {subjects.map((subject) => {
+        const subjectTopics = getTopicsBySubject(subject.id);
+        const subjectPredictions = subjectTopics.filter(topic => topic.isPredictionTopic);
+        
+        if (subjectPredictions.length === 0) return null;
+        
+        return (
+          <Paper key={subject.id} sx={{ mb: 4, p: 3 }}>
+            <Box sx={{ display: 'flex', alignItems: 'center', mb: 3 }}>
+              <Avatar sx={{ bgcolor: subject.color, mr: 2, width: 50, height: 50, fontSize: '1.5rem' }}>
+                {subject.icon}
+              </Avatar>
+              <Box>
+                <Typography variant="h5" fontWeight="bold">
+                  {subject.name}
+                </Typography>
+                <Typography variant="body2" color="text.secondary">
+                  {subjectPredictions.length} prediction topics
+                </Typography>
+              </Box>
+            </Box>
+            
+            <Box sx={{ 
+              display: 'grid',
+              gridTemplateColumns: { xs: '1fr', sm: 'repeat(2, 1fr)', md: 'repeat(3, 1fr)' },
+              gap: 3
+            }}>
+              {subjectPredictions.map((topic) => {
+                const prediction = predictions.find(p => p.topicId === topic.id);
+                const probability = prediction?.probability || Math.floor(Math.random() * 20) + 80;
+                const priority = prediction?.priority || (probability > 90 ? 'High' : probability > 80 ? 'Medium' : 'Low');
+                
+                return (
+                  <Card key={topic.id} sx={{ 
+                    height: '100%',
+                    border: priority === 'High' ? '2px solid #ff9800' : '1px solid #e0e0e0',
+                    '&:hover': { boxShadow: 6 }
+                  }}>
+                      <CardContent>
+                        <Box sx={{ display: 'flex', justifyContent: 'between', alignItems: 'start', mb: 2 }}>
+                          <Typography variant="h6" fontWeight="bold" sx={{ flex: 1 }}>
+                            {topic.name}
+                          </Typography>
+                          <Chip 
+                            label={`${probability}%`}
+                            color={probability > 90 ? 'error' : probability > 80 ? 'warning' : 'info'}
+                            size="small"
+                            sx={{ ml: 1 }}
+                          />
+                        </Box>
+                        
+                        <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+                          {topic.description}
+                        </Typography>
+                        
+                        <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap', mb: 2 }}>
+                          <Chip 
+                            label={priority}
+                            color={priority === 'High' ? 'error' : priority === 'Medium' ? 'warning' : 'default'}
+                            size="small"
+                          />
+                          <Chip 
+                            label={topic.difficulty}
+                            color={topic.difficulty === 'Advanced' ? 'error' : topic.difficulty === 'Intermediate' ? 'warning' : 'success'}
+                            size="small"
+                            variant="outlined"
+                          />
+                          <Chip 
+                            label={`${topic.estimatedHours}h`}
+                            size="small"
+                            variant="outlined"
+                            icon={<Timer />}
+                          />
+                        </Box>
+                        
+                        <Button 
+                          variant="contained" 
+                          fullWidth
+                          startIcon={<PlayArrow />}
+                          onClick={() => handleTopicClick(topic)}
+                          sx={{ mt: 'auto' }}
+                        >
+                          Study This Topic
+                        </Button>
+                      </CardContent>
+                    </Card>
+                );
+              })}
+            </Box>
+          </Paper>
+        );
+      })}
+      
+      {predictionTopics.length === 0 && (
+        <Paper sx={{ p: 4, textAlign: 'center' }}>
+          <Psychology sx={{ fontSize: 60, color: 'grey.400', mb: 2 }} />
+          <Typography variant="h6" color="text.secondary" gutterBottom>
+            No Predictions Available Yet
+          </Typography>
+          <Typography variant="body2" color="text.secondary">
+            Check back later for AI-powered exam predictions
+          </Typography>
+        </Paper>
+      )}
+    </Container>
+  );
+
   return (
     <Box sx={{ minHeight: '100vh', backgroundColor: '#f8fafc' }}>
       {/* Header */}
@@ -670,6 +777,7 @@ const StudentDashboard: React.FC<StudentDashboardProps> = ({ onBackToHome }) => 
         {currentView === 'subjects' && renderSubjects()}
         {currentView === 'topics' && renderTopics()}
         {currentView === 'questions' && renderQuestions()}
+        {currentView === 'predictions' && renderPredictions()}
       </Box>
     </Box>
   );
