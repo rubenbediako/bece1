@@ -217,12 +217,44 @@ const AuthPage: React.FC<AuthPageProps> = ({ adminMode = false, onBack }) => {
                 <Typography variant="body2" sx={{ fontWeight: 'bold', color: '#1976d2' }}>Admin Login:</Typography>
                 <Typography variant="body2">📧 admin@bece2026.com</Typography>
                 <Typography variant="body2">🔐 admin123</Typography>
+                <Button
+                  size="small"
+                  variant="outlined"
+                  onClick={() => {
+                    setLoginForm({
+                      email: 'admin@bece2026.com',
+                      password: 'admin123',
+                      accessCode: '',
+                      userType: 'admin'
+                    });
+                    setTabValue(0);
+                  }}
+                  sx={{ mt: 1, color: '#1976d2', borderColor: '#1976d2' }}
+                >
+                  Quick Fill
+                </Button>
               </Box>
               <Box>
                 <Typography variant="body2" sx={{ fontWeight: 'bold', color: '#1976d2' }}>Student Login:</Typography>
                 <Typography variant="body2">📧 student@bece2026.com</Typography>
                 <Typography variant="body2">🔐 student123</Typography>
                 <Typography variant="body2">🎫 Access Code: BECE2026</Typography>
+                <Button
+                  size="small"
+                  variant="outlined"
+                  onClick={() => {
+                    setLoginForm({
+                      email: 'student@bece2026.com',
+                      password: 'student123',
+                      accessCode: 'BECE2026',
+                      userType: 'student'
+                    });
+                    setTabValue(0);
+                  }}
+                  sx={{ mt: 1, color: '#1976d2', borderColor: '#1976d2' }}
+                >
+                  Quick Fill
+                </Button>
               </Box>
             </Box>
           </Box>

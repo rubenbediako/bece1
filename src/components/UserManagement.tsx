@@ -27,8 +27,7 @@ import {
   Stack,
   Avatar,
   Tabs,
-  Tab,
-  Grid
+  Tab
 } from '@mui/material';
 import {
   Add,
@@ -204,7 +203,7 @@ const UserManagement: React.FC = () => {
     }
   };
 
-  const getRoleIcon = (role: string) => {
+  const getRoleIcon = (role: string): React.ReactElement => {
     switch (role) {
       case 'admin': return <AdminPanelSettings />;
       case 'teacher': return <School />;
@@ -242,48 +241,40 @@ const UserManagement: React.FC = () => {
       {success && <Alert severity="success" sx={{ mb: 2 }}>{success}</Alert>}
 
       {/* User Statistics */}
-      <Grid container spacing={3} sx={{ mb: 4 }}>
-        <Grid item xs={12} sm={6} md={3}>
-          <Card>
-            <CardContent sx={{ textAlign: 'center' }}>
-              <Typography variant="h3" color="primary.main" fontWeight="bold">
-                {users.length}
-              </Typography>
-              <Typography variant="h6">Total Users</Typography>
-            </CardContent>
-          </Card>
-        </Grid>
-        <Grid item xs={12} sm={6} md={3}>
-          <Card>
-            <CardContent sx={{ textAlign: 'center' }}>
-              <Typography variant="h3" color="error.main" fontWeight="bold">
-                {users.filter(u => u.role === 'admin').length}
-              </Typography>
-              <Typography variant="h6">Admins</Typography>
-            </CardContent>
-          </Card>
-        </Grid>
-        <Grid item xs={12} sm={6} md={3}>
-          <Card>
-            <CardContent sx={{ textAlign: 'center' }}>
-              <Typography variant="h3" color="warning.main" fontWeight="bold">
-                {users.filter(u => u.role === 'teacher').length}
-              </Typography>
-              <Typography variant="h6">Teachers</Typography>
-            </CardContent>
-          </Card>
-        </Grid>
-        <Grid item xs={12} sm={6} md={3}>
-          <Card>
-            <CardContent sx={{ textAlign: 'center' }}>
-              <Typography variant="h3" color="success.main" fontWeight="bold">
-                {users.filter(u => u.role === 'student').length}
-              </Typography>
-              <Typography variant="h6">Students</Typography>
-            </CardContent>
-          </Card>
-        </Grid>
-      </Grid>
+      <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: 3, mb: 4 }}>
+        <Card>
+          <CardContent sx={{ textAlign: 'center' }}>
+            <Typography variant="h3" color="primary.main" fontWeight="bold">
+              {users.length}
+            </Typography>
+            <Typography variant="h6">Total Users</Typography>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardContent sx={{ textAlign: 'center' }}>
+            <Typography variant="h3" color="error.main" fontWeight="bold">
+              {users.filter(u => u.role === 'admin').length}
+            </Typography>
+            <Typography variant="h6">Admins</Typography>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardContent sx={{ textAlign: 'center' }}>
+            <Typography variant="h3" color="warning.main" fontWeight="bold">
+              {users.filter(u => u.role === 'teacher').length}
+            </Typography>
+            <Typography variant="h6">Teachers</Typography>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardContent sx={{ textAlign: 'center' }}>
+            <Typography variant="h3" color="success.main" fontWeight="bold">
+              {users.filter(u => u.role === 'student').length}
+            </Typography>
+            <Typography variant="h6">Students</Typography>
+          </CardContent>
+        </Card>
+      </Box>
 
       {/* User Tabs */}
       <Box sx={{ borderBottom: 1, borderColor: 'divider' }}>
@@ -446,7 +437,7 @@ const UserTable: React.FC<{
   onEdit: (user: any) => void;
   onDelete: (userId: string, userName: string) => void;
   getRoleColor: (role: string) => any;
-  getRoleIcon: (role: string) => React.ReactNode;
+  getRoleIcon: (role: string) => React.ReactElement;
   loading: boolean;
 }> = ({ users, currentUser, onEdit, onDelete, getRoleColor, getRoleIcon, loading }) => {
   return (

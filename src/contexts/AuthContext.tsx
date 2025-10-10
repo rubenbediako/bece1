@@ -35,6 +35,11 @@ interface AuthContextType {
   setAutoGenerateCodes: (enabled: boolean) => void;
   sendCodeToAdmin: (code: string, userPhone?: string, method?: string) => void;
   generateCodeForUser: (userPhone: string, method?: 'whatsapp' | 'sms' | 'both') => string;
+  // User management functions
+  getAllUsers: () => User[];
+  createUser: (userData: RegisterData & { password: string }) => Promise<boolean>;
+  updateUser: (userId: string, userData: Partial<User>) => Promise<boolean>;
+  deleteUser: (userId: string) => Promise<boolean>;
 }
 
 interface RegisterData {
@@ -446,6 +451,82 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     return newCode;
   };
 
+  // User management functions for admin
+  const getAllUsers = (): User[] => {
+    return [...users, ...initialUsers];
+  };
+
+  const createUser = async (userData: RegisterData & { password: string }): Promise<boolean> => {
+    // Check if email already exists
+    const allUsers = getAllUsers();
+    const emailExists = allUsers.some(u => u.email === userData.email);
+    const usernameExists = allUsers.some(u => u.username === userData.username);
+
+    if (emailExists || usernameExists) {
+      return false;
+    }
+
+    // Create new user
+    const newUser: User = {
+      id: `user-${Date.now()}`,
+      username: userData.username,
+      email: userData.email,
+      role: userData.role,
+      fullName: userData.fullName,
+      createdAt: new Date().toISOString()
+    };
+
+    // Add to credentials
+    userCredentials.push({
+      email: userData.email,
+      password: userData.password
+    });
+
+    // Add to users
+    setUsers(prev => [...prev, newUser]);
+    return true;
+  };
+
+  const updateUser = async (userId: string, userData: Partial<User>): Promise<boolean> => {
+    try {
+      setUsers(prev => 
+        prev.map(user => 
+          user.id === userId 
+            ? { ...user, ...userData, id: userId } // Keep original ID
+            : user
+        )
+      );
+      return true;
+    } catch (error) {
+      return false;
+    }
+  };
+
+  const deleteUser = async (userId: string): Promise<boolean> => {
+    try {
+      // Don't allow deleting the current user or default admin
+      if (user?.id === userId || userId === 'admin-default') {
+        return false;
+      }
+
+      // Find user to get email for credential removal
+      const userToDelete = users.find(u => u.id === userId);
+      if (userToDelete) {
+        // Remove from credentials
+        const credIndex = userCredentials.findIndex(cred => cred.email === userToDelete.email);
+        if (credIndex > -1) {
+          userCredentials.splice(credIndex, 1);
+        }
+      }
+
+      // Remove from users
+      setUsers(prev => prev.filter(user => user.id !== userId));
+      return true;
+    } catch (error) {
+      return false;
+    }
+  };
+
   const value: AuthContextType = {
     user,
     login,
@@ -465,7 +546,12 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     autoGenerateCodes,
     setAutoGenerateCodes,
     sendCodeToAdmin,
-    generateCodeForUser
+    generateCodeForUser,
+    // User management functions
+    getAllUsers,
+    createUser,
+    updateUser,
+    deleteUser
   };
 
   return (
