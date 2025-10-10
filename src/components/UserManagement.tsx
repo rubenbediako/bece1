@@ -152,21 +152,18 @@ const UserManagement: React.FC = () => {
         result = await createUser({
           email: formData.email,
           password: formData.password,
-          firstName: formData.firstName,
-          lastName: formData.lastName,
-          role: formData.role,
-          school: formData.school,
-          grade: formData.grade,
-          subjects: formData.subjects
+          username: formData.email.split('@')[0], // Generate username from email
+          fullName: `${formData.firstName} ${formData.lastName}`,
+          role: formData.role
         });
       }
 
-      if (result.success) {
+      if (result) {
         setUsers(getAllUsers());
         setOpenDialog(false);
         setSuccess(editingUser ? 'User updated successfully' : 'User created successfully');
       } else {
-        setError(result.error || 'Operation failed');
+        setError('Operation failed');
       }
     } catch (err) {
       setError('An error occurred. Please try again.');
@@ -180,11 +177,11 @@ const UserManagement: React.FC = () => {
       setLoading(true);
       try {
         const result = await deleteUser(userId);
-        if (result.success) {
+        if (result) {
           setUsers(getAllUsers());
           setSuccess('User deleted successfully');
         } else {
-          setError(result.error || 'Failed to delete user');
+          setError('Failed to delete user');
         }
       } catch (err) {
         setError('An error occurred. Please try again.');

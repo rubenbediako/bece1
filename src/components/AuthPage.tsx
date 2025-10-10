@@ -212,7 +212,7 @@ const AuthPage: React.FC<AuthPageProps> = ({ adminMode = false, onBack }) => {
             <Typography variant="subtitle2" sx={{ color: '#1976d2', fontWeight: 'bold', mb: 1 }}>
               🧪 Demo Credentials for Testing
             </Typography>
-            <Box sx={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 2, fontSize: '0.875rem' }}>
+            <Box sx={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 2, fontSize: '0.875rem' }}>
               <Box>
                 <Typography variant="body2" sx={{ fontWeight: 'bold', color: '#1976d2' }}>Admin Login:</Typography>
                 <Typography variant="body2">📧 admin@bece2026.com</Typography>
@@ -226,6 +226,28 @@ const AuthPage: React.FC<AuthPageProps> = ({ adminMode = false, onBack }) => {
                       password: 'admin123',
                       accessCode: '',
                       userType: 'admin'
+                    });
+                    setTabValue(0);
+                  }}
+                  sx={{ mt: 1, color: '#1976d2', borderColor: '#1976d2' }}
+                >
+                  Quick Fill
+                </Button>
+              </Box>
+              <Box>
+                <Typography variant="body2" sx={{ fontWeight: 'bold', color: '#1976d2' }}>Teacher Login:</Typography>
+                <Typography variant="body2">📧 teacher@bece2026.com</Typography>
+                <Typography variant="body2">🔐 teacher123</Typography>
+                <Typography variant="body2">🎫 Access Code: BECE2026</Typography>
+                <Button
+                  size="small"
+                  variant="outlined"
+                  onClick={() => {
+                    setLoginForm({
+                      email: 'teacher@bece2026.com',
+                      password: 'teacher123',
+                      accessCode: 'BECE2026',
+                      userType: 'student'
                     });
                     setTabValue(0);
                   }}
@@ -400,6 +422,7 @@ const AuthPage: React.FC<AuthPageProps> = ({ adminMode = false, onBack }) => {
                       label="Role"
                     >
                       <MenuItem value="student">Student</MenuItem>
+                      <MenuItem value="teacher">Teacher</MenuItem>
                       <MenuItem value="admin">Administrator</MenuItem>
                     </Select>
                   </FormControl>

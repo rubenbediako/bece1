@@ -5,7 +5,7 @@ export interface User {
   id: string;
   username: string;
   email: string;
-  role: 'admin' | 'student';
+  role: 'admin' | 'student' | 'teacher';
   fullName: string;
   createdAt: string;
 }
@@ -47,7 +47,7 @@ interface RegisterData {
   email: string;
   password: string;
   fullName: string;
-  role: 'admin' | 'student';
+  role: 'admin' | 'student' | 'teacher';
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -78,6 +78,14 @@ const initialUsers: User[] = [
     role: 'student',
     fullName: 'Demo Student',
     createdAt: new Date().toISOString()
+  },
+  {
+    id: 'teacher-demo',
+    username: 'teacher',
+    email: 'teacher@bece2026.com',
+    role: 'teacher',
+    fullName: 'Demo Teacher',
+    createdAt: new Date().toISOString()
   }
 ];
 
@@ -94,6 +102,10 @@ const userCredentials: { email: string; password: string }[] = [
   {
     email: 'student@bece2026.com',
     password: 'student123'
+  },
+  {
+    email: 'teacher@bece2026.com',
+    password: 'teacher123'
   }
 ];
 
@@ -536,7 +548,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     logout,
     isAuthenticated: !!user,
     isAdmin: user?.role === 'admin',
-    isStudent: user?.role === 'student',
+    isStudent: user?.role === 'student' || user?.role === 'teacher',
     generateAccessCode,
     getCurrentAccessCode,
     sendCodeToWhatsApp,
