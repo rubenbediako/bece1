@@ -52,7 +52,7 @@ import {
 } from '@mui/icons-material';
 import { useAppContext } from '../contexts/AppContext';
 
-// Sample data structure
+// Data structure types
 import type { SubjectData, TopicData, PredictionData, QuestionData } from '../contexts/AppContext';
 
 // Math symbols and functions for mathematical questions

@@ -15,7 +15,7 @@ const mockQuestion = {
   points: 15,
   createdAt: new Date().toISOString(),
   updatedAt: new Date().toISOString(),
-  correctAnswer: 'Sample answer about climate change impacts on Ghana\'s agriculture...'
+  correctAnswer: 'Climate change affects Ghana\'s agriculture through changing rainfall patterns, increased temperatures, and extreme weather events, leading to reduced crop yields and food security challenges.'
 };
 
 // Mock AI Answer data

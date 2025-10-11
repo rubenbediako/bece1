@@ -4,7 +4,6 @@ import {
   Container,
   Typography,
   Button,
-  Grid,
   Card,
   CardContent,
   AppBar,
@@ -22,530 +21,534 @@ import {
 import {
   School,
   TrendingUp,
-  VolumeUp,
+  Volume2,
   Users,
   BookOpen,
   Award,
   PlayCircle,
-  HeadphonesIcon,
-  BrainCircuit,
-  Target,
+  Headphones,
+  ArrowRight,
+  CheckCircle,
+  Star,
   Menu as MenuIcon,
-  LoginIcon,
-  UserPlus
+  X
 } from 'lucide-react';
 import { motion } from 'framer-motion';
 
-interface LandingPageProps {
-  onNavigateToAuth: (adminMode: boolean) => void;
+interface Props {
+  onGetStarted: () => void;
 }
 
-const LandingPage: React.FC<LandingPageProps> = ({ onNavigateToAuth }) => {
-  const [menuAnchor, setMenuAnchor] = useState<null | HTMLElement>(null);
+export const LandingPage: React.FC<Props> = ({ onGetStarted }) => {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('md'));
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
-  const handleMenuOpen = (event: React.MouseEvent<HTMLElement>) => {
-    setMenuAnchor(event.currentTarget);
-  };
-
-  const handleMenuClose = () => {
-    setMenuAnchor(null);
-  };
+  const subjects = [
+    { name: 'Mathematics', icon: '🧮', color: '#1976d2' },
+    { name: 'English Language', icon: '📝', color: '#d32f2f' },
+    { name: 'Science', icon: '🔬', color: '#388e3c' },
+    { name: 'Social Studies', icon: '🌍', color: '#f57c00' },
+    { name: 'ICT', icon: '💻', color: '#7b1fa2' },
+    { name: 'Technical Skills', icon: '🔧', color: '#455a64' }
+  ];
 
   const features = [
     {
-      icon: <BrainCircuit size={48} />,
-      title: 'AI-Powered Predictions',
-      description: 'Advanced algorithms analyze past papers to predict likely BECE 2026 topics with high accuracy.',
+      icon: <TrendingUp size={40} />,
+      title: 'Smart Predictions',
+      description: 'AI-powered analysis of past BECE papers to predict likely exam questions',
       color: '#1976d2'
     },
     {
-      icon: <HeadphonesIcon size={48} />,
+      icon: <Volume2 size={40} />,
       title: 'Audio Explanations',
-      description: 'Listen to detailed solution explanations with customizable voice settings and teaching styles.',
-      color: '#9c27b0'
+      description: 'Listen to detailed explanations of solutions in multiple teaching styles',
+      color: '#d32f2f'
     },
     {
-      icon: <Target size={48} />,
-      title: 'Focused Learning',
-      description: 'Study efficiently with topic predictions and comprehensive question banks for all subjects.',
+      icon: <Users size={40} />,
+      title: 'Student Management',
+      description: 'Track multiple students progress and performance across all subjects',
       color: '#388e3c'
     },
     {
-      icon: <Award size={48} />,
-      title: 'Proven Results',
-      description: 'Join thousands of students who have improved their BECE performance using our platform.',
+      icon: <Award size={40} />,
+      title: 'BECE Ready',
+      description: 'Specifically designed for Ghana BECE 2026 examination preparation',
       color: '#f57c00'
     }
   ];
 
-  const subjects = [
-    'Social Studies', 'RME', 'English Language', 'Mathematics', 
-    'Integrated Science', 'Ghanaian Language', 'French'
-  ];
-
   const stats = [
-    { number: '10,000+', label: 'Students Helped' },
-    { number: '95%', label: 'Success Rate' },
-    { number: '1,500+', label: 'Practice Questions' },
-    { number: '24/7', label: 'Platform Access' }
+    { label: 'Subjects Covered', value: '6', icon: <BookOpen size={24} /> },
+    { label: 'BECE Focused', value: '2026', icon: <TrendingUp size={24} /> },
+    { label: 'Audio Features', value: 'AI', icon: <Headphones size={24} /> },
+    { label: 'Platform Ready', value: '100%', icon: <Users size={24} /> }
   ];
 
   return (
     <Box sx={{ minHeight: '100vh', bgcolor: 'background.default' }}>
       {/* Navigation */}
-      <AppBar position="sticky" elevation={1} sx={{ bgcolor: 'white', color: 'text.primary' }}>
+      <AppBar position="fixed" sx={{ bgcolor: 'rgba(25, 118, 210, 0.95)', backdropFilter: 'blur(10px)' }}>
         <Toolbar>
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, flexGrow: 1 }}>
-            <School size={32} color="#1976d2" />
-            <Typography variant="h6" sx={{ fontWeight: 'bold', color: '#1976d2' }}>
-              BECE 2026 Prediction
+          <Box sx={{ display: 'flex', alignItems: 'center', flexGrow: 1 }}>
+            <School size={32} color="white" />
+            <Typography variant="h6" sx={{ ml: 1, fontWeight: 'bold', color: 'white' }}>
+              BECE 2026 Predictions
             </Typography>
           </Box>
-
-          {!isMobile ? (
+          
+          {!isMobile && (
             <Stack direction="row" spacing={2}>
-              <Button
-                variant="outlined"
-                startIcon={<LoginIcon size={20} />}
-                onClick={() => onNavigateToAuth(false)}
+              <Button color="inherit" href="#features">Features</Button>
+              <Button color="inherit" href="#subjects">Subjects</Button>
+              <Button color="inherit" href="#contact">Contact</Button>
+              <Button 
+                variant="contained" 
+                sx={{ bgcolor: 'white', color: 'primary.main', '&:hover': { bgcolor: 'grey.100' } }}
+                onClick={onGetStarted}
               >
-                Student Login
-              </Button>
-              <Button
-                variant="contained"
-                startIcon={<UserPlus size={20} />}
-                onClick={() => onNavigateToAuth(true)}
-                sx={{ bgcolor: '#d32f2f', '&:hover': { bgcolor: '#b71c1c' } }}
-              >
-                Admin Portal
+                Get Started
               </Button>
             </Stack>
-          ) : (
-            <>
-              <IconButton onClick={handleMenuOpen}>
-                <MenuIcon />
-              </IconButton>
-              <Menu
-                anchorEl={menuAnchor}
-                open={Boolean(menuAnchor)}
-                onClose={handleMenuClose}
-              >
-                <MenuItem onClick={() => { onNavigateToAuth(false); handleMenuClose(); }}>
-                  Student Login
-                </MenuItem>
-                <MenuItem onClick={() => { onNavigateToAuth(true); handleMenuClose(); }}>
-                  Admin Portal
-                </MenuItem>
-              </Menu>
-            </>
+          )}
+          
+          {isMobile && (
+            <IconButton 
+              color="inherit" 
+              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+            >
+              {mobileMenuOpen ? <X size={24} /> : <MenuIcon size={24} />}
+            </IconButton>
           )}
         </Toolbar>
+        
+        {/* Mobile Menu */}
+        {isMobile && mobileMenuOpen && (
+          <Box sx={{ bgcolor: 'rgba(25, 118, 210, 0.98)', p: 2 }}>
+            <Stack spacing={2}>
+              <Button color="inherit" href="#features" fullWidth>Features</Button>
+              <Button color="inherit" href="#subjects" fullWidth>Subjects</Button>
+              <Button color="inherit" href="#contact" fullWidth>Contact</Button>
+              <Button 
+                variant="contained" 
+                sx={{ bgcolor: 'white', color: 'primary.main' }}
+                onClick={onGetStarted}
+                fullWidth
+              >
+                Get Started
+              </Button>
+            </Stack>
+          </Box>
+        )}
       </AppBar>
 
       {/* Hero Section */}
       <Box
         sx={{
-          background: 'linear-gradient(135deg, #1976d2 0%, #42a5f5 100%)',
+          background: 'linear-gradient(135deg, #1976d2 0%, #1565c0 50%, #0d47a1 100%)',
           color: 'white',
-          py: { xs: 8, md: 12 },
-          position: 'relative',
-          overflow: 'hidden'
+          pt: { xs: 12, md: 16 },
+          pb: { xs: 8, md: 12 },
+          overflow: 'hidden',
+          position: 'relative'
         }}
       >
         <Container maxWidth="lg">
-          <Grid container spacing={4} alignItems="center">
-            <Grid item xs={12} md={6}>
+          <Stack 
+            direction={{ xs: 'column', md: 'row' }} 
+            spacing={4} 
+            alignItems="center"
+            sx={{ minHeight: { md: '60vh' } }}
+          >
+            <Box flex={1}>
               <motion.div
-                initial={{ opacity: 0, x: -50 }}
-                animate={{ opacity: 1, x: 0 }}
+                initial={{ opacity: 0, y: 50 }}
+                animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.6 }}
               >
-                <Typography
-                  variant="h2"
-                  component="h1"
-                  gutterBottom
-                  sx={{
-                    fontWeight: 'bold',
+                <Typography 
+                  variant="h2" 
+                  sx={{ 
+                    fontWeight: 'bold', 
                     fontSize: { xs: '2.5rem', md: '3.5rem' },
-                    lineHeight: 1.2
+                    mb: 2,
+                    textShadow: '0 2px 4px rgba(0,0,0,0.3)'
                   }}
                 >
-                  Master Your BECE 2026
+                  BECE 2026 Prediction Platform
                 </Typography>
-                <Typography
-                  variant="h5"
-                  sx={{
-                    mb: 4,
+                <Typography 
+                  variant="h5" 
+                  sx={{ 
+                    mb: 4, 
                     opacity: 0.9,
                     fontSize: { xs: '1.2rem', md: '1.5rem' }
                   }}
                 >
-                  AI-powered predictions, interactive learning, and audio explanations to guarantee your success
+                  AI-powered exam predictions with interactive audio explanations for BECE success
                 </Typography>
                 
                 <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2} sx={{ mb: 4 }}>
                   <Button
-                    variant="contained"
                     size="large"
+                    variant="contained"
+                    onClick={onGetStarted}
                     startIcon={<PlayCircle size={24} />}
-                    onClick={() => onNavigateToAuth(false)}
                     sx={{
                       bgcolor: 'white',
-                      color: '#1976d2',
-                      py: 1.5,
+                      color: 'primary.main',
                       px: 4,
+                      py: 1.5,
                       fontSize: '1.1rem',
-                      '&:hover': { bgcolor: '#f5f5f5' }
+                      '&:hover': { bgcolor: 'grey.100', transform: 'translateY(-2px)' },
+                      transition: 'all 0.3s ease'
                     }}
                   >
-                    Start Learning Now
+                    Start Learning
                   </Button>
+                  
                   <Button
-                    variant="outlined"
                     size="large"
-                    startIcon={<VolumeUp size={24} />}
+                    variant="outlined"
+                    startIcon={<Volume2 size={24} />}
                     sx={{
                       borderColor: 'white',
                       color: 'white',
-                      py: 1.5,
                       px: 4,
+                      py: 1.5,
                       fontSize: '1.1rem',
-                      '&:hover': { bgcolor: 'rgba(255,255,255,0.1)' }
+                      '&:hover': { 
+                        bgcolor: 'rgba(255,255,255,0.1)', 
+                        borderColor: 'white',
+                        transform: 'translateY(-2px)' 
+                      },
+                      transition: 'all 0.3s ease'
                     }}
                   >
-                    Try Audio Explanations
+                    Audio Features
                   </Button>
                 </Stack>
 
-                <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
-                  <Chip label="🤖 AI-Powered" sx={{ bgcolor: 'rgba(255,255,255,0.2)', color: 'white' }} />
-                  <Chip label="🎧 Audio Learning" sx={{ bgcolor: 'rgba(255,255,255,0.2)', color: 'white' }} />
+                <Stack direction="row" spacing={2} flexWrap="wrap" useFlexGap>
+                  <Chip label="🎯 BECE Focused" sx={{ bgcolor: 'rgba(255,255,255,0.2)', color: 'white' }} />
+                  <Chip label="🧠 AI Powered" sx={{ bgcolor: 'rgba(255,255,255,0.2)', color: 'white' }} />
+                  <Chip label="🔊 Audio Learning" sx={{ bgcolor: 'rgba(255,255,255,0.2)', color: 'white' }} />
                   <Chip label="📱 Mobile Friendly" sx={{ bgcolor: 'rgba(255,255,255,0.2)', color: 'white' }} />
-                  <Chip label="🔒 Secure Access" sx={{ bgcolor: 'rgba(255,255,255,0.2)', color: 'white' }} />
-                </Box>
+                </Stack>
               </motion.div>
-            </Grid>
+            </Box>
             
-            <Grid item xs={12} md={6}>
+            <Box flex={1}>
               <motion.div
-                initial={{ opacity: 0, x: 50 }}
-                animate={{ opacity: 1, x: 0 }}
+                initial={{ opacity: 0, scale: 0.8 }}
+                animate={{ opacity: 1, scale: 1 }}
                 transition={{ duration: 0.6, delay: 0.2 }}
               >
                 <Paper
-                  elevation={8}
+                  elevation={20}
                   sx={{
                     p: 4,
+                    bgcolor: 'rgba(255,255,255,0.1)',
+                    backdropFilter: 'blur(20px)',
+                    border: '1px solid rgba(255,255,255,0.2)',
                     borderRadius: 4,
-                    background: 'rgba(255,255,255,0.95)',
-                    backdropFilter: 'blur(10px)'
+                    textAlign: 'center'
                   }}
                 >
-                  <Typography variant="h6" gutterBottom color="text.primary" sx={{ fontWeight: 'bold' }}>
-                    🎯 2026 Topic Predictions
+                  <School size={80} color="white" style={{ marginBottom: 16 }} />
+                  <Typography variant="h6" sx={{ mb: 2, color: 'white' }}>
+                    Ready for BECE 2026?
                   </Typography>
-                  <Box sx={{ mb: 3 }}>
-                    {subjects.slice(0, 4).map((subject, index) => (
-                      <Box key={subject} sx={{ display: 'flex', justifyContent: 'space-between', mb: 1 }}>
-                        <Typography variant="body2" color="text.primary">{subject}</Typography>
-                        <Typography variant="body2" color="success.main" sx={{ fontWeight: 'bold' }}>
-                          {95 - index * 3}% likely
-                        </Typography>
-                      </Box>
-                    ))}
-                  </Box>
-                  <Button
-                    fullWidth
-                    variant="contained"
-                    startIcon={<TrendingUp size={20} />}
-                    onClick={() => onNavigateToAuth(false)}
-                  >
-                    View Full Predictions
-                  </Button>
+                  <Typography variant="body1" sx={{ color: 'rgba(255,255,255,0.8)' }}>
+                    Start your BECE 2026 preparation journey with AI-powered predictions and comprehensive study materials.
+                  </Typography>
                 </Paper>
               </motion.div>
-            </Grid>
-          </Grid>
+            </Box>
+          </Stack>
         </Container>
       </Box>
 
       {/* Statistics Section */}
       <Container maxWidth="lg" sx={{ py: 8 }}>
-        <motion.div
-          initial={{ opacity: 0, y: 50 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6 }}
-          viewport={{ once: true }}
+        <Typography variant="h4" textAlign="center" sx={{ mb: 6, fontWeight: 'bold' }}>
+          Ready for BECE 2026 Preparation
+        </Typography>
+        
+        <Stack 
+          direction={{ xs: 'column', sm: 'row' }} 
+          spacing={4} 
+          justifyContent="center"
         >
-          <Grid container spacing={4}>
-            {stats.map((stat, index) => (
-              <Grid item xs={6} md={3} key={index}>
-                <Box textAlign="center">
-                  <Typography
-                    variant="h3"
-                    sx={{
-                      fontWeight: 'bold',
-                      color: '#1976d2',
-                      fontSize: { xs: '2rem', md: '3rem' }
-                    }}
-                  >
-                    {stat.number}
-                  </Typography>
-                  <Typography variant="h6" color="text.secondary">
-                    {stat.label}
-                  </Typography>
-                </Box>
-              </Grid>
-            ))}
-          </Grid>
-        </motion.div>
-      </Container>
-
-      <Divider />
-
-      {/* Features Section */}
-      <Container maxWidth="lg" sx={{ py: 8 }}>
-        <motion.div
-          initial={{ opacity: 0, y: 50 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6 }}
-          viewport={{ once: true }}
-        >
-          <Typography
-            variant="h3"
-            component="h2"
-            textAlign="center"
-            gutterBottom
-            sx={{
-              fontWeight: 'bold',
-              mb: 6,
-              fontSize: { xs: '2rem', md: '3rem' }
-            }}
-          >
-            Why Choose Our Platform?
-          </Typography>
-          
-          <Grid container spacing={4}>
-            {features.map((feature, index) => (
-              <Grid item xs={12} md={6} key={index}>
-                <motion.div
-                  initial={{ opacity: 0, y: 30 }}
-                  whileInView={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.6, delay: index * 0.1 }}
-                  viewport={{ once: true }}
-                >
-                  <Card
-                    elevation={2}
-                    sx={{
-                      height: '100%',
-                      transition: 'transform 0.3s ease-in-out, box-shadow 0.3s ease-in-out',
-                      '&:hover': {
-                        transform: 'translateY(-8px)',
-                        boxShadow: 6
-                      }
-                    }}
-                  >
-                    <CardContent sx={{ p: 4 }}>
-                      <Box
-                        sx={{
-                          display: 'flex',
-                          alignItems: 'center',
-                          mb: 3,
-                          color: feature.color
-                        }}
-                      >
-                        {feature.icon}
-                        <Typography
-                          variant="h5"
-                          sx={{ ml: 2, fontWeight: 'bold' }}
-                        >
-                          {feature.title}
-                        </Typography>
-                      </Box>
-                      <Typography
-                        variant="body1"
-                        color="text.secondary"
-                        sx={{ lineHeight: 1.6 }}
-                      >
-                        {feature.description}
-                      </Typography>
-                    </CardContent>
-                  </Card>
-                </motion.div>
-              </Grid>
-            ))}
-          </Grid>
-        </motion.div>
-      </Container>
-
-      <Divider />
-
-      {/* Subjects Section */}
-      <Container maxWidth="lg" sx={{ py: 8 }}>
-        <motion.div
-          initial={{ opacity: 0, y: 50 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6 }}
-          viewport={{ once: true }}
-        >
-          <Typography
-            variant="h3"
-            component="h2"
-            textAlign="center"
-            gutterBottom
-            sx={{
-              fontWeight: 'bold',
-              mb: 6,
-              fontSize: { xs: '2rem', md: '3rem' }
-            }}
-          >
-            All BECE Subjects Covered
-          </Typography>
-          
-          <Grid container spacing={2} justifyContent="center">
-            {subjects.map((subject, index) => (
-              <Grid item xs={6} sm={4} md={3} key={index}>
-                <motion.div
-                  initial={{ opacity: 0, scale: 0.8 }}
-                  whileInView={{ opacity: 1, scale: 1 }}
-                  transition={{ duration: 0.4, delay: index * 0.1 }}
-                  viewport={{ once: true }}
-                >
-                  <Paper
-                    elevation={1}
-                    sx={{
-                      p: 3,
-                      textAlign: 'center',
-                      borderRadius: 3,
-                      transition: 'all 0.3s ease-in-out',
-                      cursor: 'pointer',
-                      '&:hover': {
-                        elevation: 4,
-                        transform: 'scale(1.05)',
-                        bgcolor: '#f5f5f5'
-                      }
-                    }}
-                  >
-                    <BookOpen size={32} color="#1976d2" style={{ marginBottom: 8 }} />
-                    <Typography variant="h6" sx={{ fontWeight: 'bold', fontSize: { xs: '0.9rem', md: '1.1rem' } }}>
-                      {subject}
-                    </Typography>
-                  </Paper>
-                </motion.div>
-              </Grid>
-            ))}
-          </Grid>
-        </motion.div>
-      </Container>
-
-      {/* CTA Section */}
-      <Box
-        sx={{
-          background: 'linear-gradient(135deg, #388e3c 0%, #66bb6a 100%)',
-          color: 'white',
-          py: 8
-        }}
-      >
-        <Container maxWidth="md">
-          <motion.div
-            initial={{ opacity: 0, y: 50 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6 }}
-            viewport={{ once: true }}
-          >
-            <Box textAlign="center">
-              <Typography
-                variant="h3"
-                component="h2"
-                gutterBottom
-                sx={{
-                  fontWeight: 'bold',
-                  mb: 3,
-                  fontSize: { xs: '2rem', md: '3rem' }
+          {stats.map((stat, index) => (
+            <motion.div
+              key={index}
+              initial={{ opacity: 0, y: 50 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5, delay: index * 0.1 }}
+              viewport={{ once: true }}
+            >
+              <Card 
+                sx={{ 
+                  textAlign: 'center', 
+                  p: 3,
+                  minWidth: 200,
+                  '&:hover': { 
+                    transform: 'translateY(-5px)',
+                    boxShadow: 6
+                  },
+                  transition: 'all 0.3s ease'
                 }}
               >
+                <Box sx={{ color: 'primary.main', mb: 2 }}>
+                  {stat.icon}
+                </Box>
+                <Typography variant="h4" sx={{ fontWeight: 'bold', color: 'primary.main', mb: 1 }}>
+                  {stat.value}
+                </Typography>
+                <Typography variant="body1" color="text.secondary">
+                  {stat.label}
+                </Typography>
+              </Card>
+            </motion.div>
+          ))}
+        </Stack>
+      </Container>
+
+      {/* Features Section */}
+      <Box id="features" sx={{ bgcolor: 'grey.50', py: 8 }}>
+        <Container maxWidth="lg">
+          <Typography variant="h4" textAlign="center" sx={{ mb: 2, fontWeight: 'bold' }}>
+            Why Choose Our Platform?
+          </Typography>
+          <Typography variant="h6" textAlign="center" color="text.secondary" sx={{ mb: 6 }}>
+            Advanced features designed specifically for BECE 2026 success
+          </Typography>
+          
+          <Stack spacing={4}>
+            {features.map((feature, index) => (
+              <motion.div
+                key={index}
+                initial={{ opacity: 0, x: index % 2 === 0 ? -50 : 50 }}
+                whileInView={{ opacity: 1, x: 0 }}
+                transition={{ duration: 0.6 }}
+                viewport={{ once: true }}
+              >
+                <Card 
+                  sx={{ 
+                    p: 4,
+                    '&:hover': { 
+                      transform: 'translateY(-5px)',
+                      boxShadow: 8
+                    },
+                    transition: 'all 0.3s ease'
+                  }}
+                >
+                  <Stack 
+                    direction={{ xs: 'column', sm: 'row' }} 
+                    spacing={3} 
+                    alignItems="center"
+                  >
+                    <Box 
+                      sx={{ 
+                        color: feature.color,
+                        bgcolor: `${feature.color}15`,
+                        p: 2,
+                        borderRadius: 2,
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center'
+                      }}
+                    >
+                      {feature.icon}
+                    </Box>
+                    <Box flex={1}>
+                      <Typography variant="h5" sx={{ mb: 1, fontWeight: 'bold' }}>
+                        {feature.title}
+                      </Typography>
+                      <Typography variant="body1" color="text.secondary">
+                        {feature.description}
+                      </Typography>
+                    </Box>
+                  </Stack>
+                </Card>
+              </motion.div>
+            ))}
+          </Stack>
+        </Container>
+      </Box>
+
+      {/* Subjects Section */}
+      <Box id="subjects" sx={{ py: 8 }}>
+        <Container maxWidth="lg">
+          <Typography variant="h4" textAlign="center" sx={{ mb: 2, fontWeight: 'bold' }}>
+            Complete Subject Coverage
+          </Typography>
+          <Typography variant="h6" textAlign="center" color="text.secondary" sx={{ mb: 6 }}>
+            All BECE subjects with predicted questions and audio explanations
+          </Typography>
+          
+          <Stack 
+            direction="row" 
+            spacing={2} 
+            flexWrap="wrap" 
+            justifyContent="center"
+            useFlexGap
+          >
+            {subjects.map((subject, index) => (
+              <motion.div
+                key={index}
+                initial={{ opacity: 0, scale: 0.8 }}
+                whileInView={{ opacity: 1, scale: 1 }}
+                transition={{ duration: 0.4, delay: index * 0.1 }}
+                viewport={{ once: true }}
+              >
+                <Card 
+                  sx={{ 
+                    p: 3,
+                    minWidth: 200,
+                    textAlign: 'center',
+                    cursor: 'pointer',
+                    '&:hover': { 
+                      transform: 'translateY(-5px)',
+                      boxShadow: 6,
+                      bgcolor: `${subject.color}10`
+                    },
+                    transition: 'all 0.3s ease'
+                  }}
+                >
+                  <Typography variant="h3" sx={{ mb: 1 }}>
+                    {subject.icon}
+                  </Typography>
+                  <Typography 
+                    variant="h6" 
+                    sx={{ 
+                      fontWeight: 'bold',
+                      color: subject.color
+                    }}
+                  >
+                    {subject.name}
+                  </Typography>
+                </Card>
+              </motion.div>
+            ))}
+          </Stack>
+        </Container>
+      </Box>
+
+      {/* CTA Section */}
+      <Box 
+        sx={{ 
+          bgcolor: 'primary.main', 
+          color: 'white', 
+          py: 8,
+          background: 'linear-gradient(135deg, #1976d2 0%, #1565c0 100%)'
+        }}
+      >
+        <Container maxWidth="lg">
+          <Stack spacing={4} alignItems="center" textAlign="center">
+            <motion.div
+              initial={{ opacity: 0, y: 30 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6 }}
+              viewport={{ once: true }}
+            >
+              <Typography variant="h3" sx={{ fontWeight: 'bold', mb: 2 }}>
                 Ready to Excel in BECE 2026?
               </Typography>
-              <Typography
-                variant="h6"
-                sx={{ mb: 4, opacity: 0.9 }}
-              >
-                Join thousands of students who are already preparing with our AI-powered platform
+              <Typography variant="h6" sx={{ mb: 4, opacity: 0.9 }}>
+                Join our platform today and start your journey to BECE success
               </Typography>
               
-              <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2} justifyContent="center">
-                <Button
-                  variant="contained"
-                  size="large"
-                  startIcon={<Users size={24} />}
-                  onClick={() => onNavigateToAuth(false)}
-                  sx={{
-                    bgcolor: 'white',
-                    color: '#388e3c',
-                    py: 1.5,
-                    px: 4,
-                    fontSize: '1.1rem',
-                    '&:hover': { bgcolor: '#f5f5f5' }
-                  }}
-                >
-                  Get Started as Student
-                </Button>
-                <Button
-                  variant="outlined"
-                  size="large"
-                  startIcon={<School size={24} />}
-                  onClick={() => onNavigateToAuth(true)}
-                  sx={{
-                    borderColor: 'white',
-                    color: 'white',
-                    py: 1.5,
-                    px: 4,
-                    fontSize: '1.1rem',
-                    '&:hover': { bgcolor: 'rgba(255,255,255,0.1)' }
-                  }}
-                >
-                  Admin Portal
-                </Button>
-              </Stack>
-            </Box>
-          </motion.div>
+              <Button
+                size="large"
+                variant="contained"
+                onClick={onGetStarted}
+                endIcon={<ArrowRight size={24} />}
+                sx={{
+                  bgcolor: 'white',
+                  color: 'primary.main',
+                  px: 6,
+                  py: 2,
+                  fontSize: '1.2rem',
+                  '&:hover': { 
+                    bgcolor: 'grey.100',
+                    transform: 'translateY(-3px)',
+                    boxShadow: 6
+                  },
+                  transition: 'all 0.3s ease'
+                }}
+              >
+                Get Started Now
+              </Button>
+            </motion.div>
+          </Stack>
+        </Container>
+      </Box>
+
+      {/* Contact Section */}
+      <Box id="contact" sx={{ py: 8, bgcolor: 'grey.50' }}>
+        <Container maxWidth="lg">
+          <Stack spacing={4} alignItems="center" textAlign="center">
+            <Typography variant="h4" sx={{ fontWeight: 'bold' }}>
+              Need Help?
+            </Typography>
+            
+            <Stack 
+              direction={{ xs: 'column', md: 'row' }} 
+              spacing={4} 
+              sx={{ width: '100%', maxWidth: 800 }}
+            >
+              <Card sx={{ flex: 1, p: 4, textAlign: 'center' }}>
+                <Typography variant="h6" sx={{ mb: 2, fontWeight: 'bold' }}>
+                  📧 Email Support
+                </Typography>
+                <Typography variant="body1" color="text.secondary">
+                  Get help with technical issues or account questions
+                </Typography>
+                <Typography variant="body2" sx={{ mt: 2 }}>
+                  support@bece2026.edu.gh
+                </Typography>
+              </Card>
+              
+              <Card sx={{ flex: 1, p: 4, textAlign: 'center' }}>
+                <Typography variant="h6" sx={{ mb: 2, fontWeight: 'bold' }}>
+                  📱 WhatsApp
+                </Typography>
+                <Typography variant="body1" color="text.secondary">
+                  Quick assistance for students and teachers
+                </Typography>
+                <Typography variant="body2" sx={{ mt: 2 }}>
+                  +233 XX XXX XXXX
+                </Typography>
+              </Card>
+            </Stack>
+          </Stack>
         </Container>
       </Box>
 
       {/* Footer */}
-      <Box sx={{ bgcolor: '#263238', color: 'white', py: 6 }}>
+      <Box sx={{ bgcolor: 'grey.900', color: 'white', py: 4 }}>
         <Container maxWidth="lg">
-          <Grid container spacing={4}>
-            <Grid item xs={12} md={6}>
-              <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 2 }}>
-                <School size={32} />
-                <Typography variant="h5" sx={{ fontWeight: 'bold' }}>
-                  BECE 2026 Prediction
-                </Typography>
-              </Box>
-              <Typography variant="body2" sx={{ opacity: 0.8, mb: 2 }}>
-                Empowering Ghanaian students with AI-powered learning tools and predictions for BECE success.
+          <Stack 
+            direction={{ xs: 'column', md: 'row' }} 
+            spacing={2} 
+            justifyContent="space-between" 
+            alignItems="center"
+          >
+            <Stack direction="row" spacing={1} alignItems="center">
+              <School size={24} />
+              <Typography variant="h6" sx={{ fontWeight: 'bold' }}>
+                BECE 2026 Prediction Platform
               </Typography>
-              <Typography variant="body2" sx={{ opacity: 0.6 }}>
-                © 2025 BECE 2026 Prediction Platform. All rights reserved.
-              </Typography>
-            </Grid>
+            </Stack>
             
-            <Grid item xs={12} md={6}>
-              <Typography variant="h6" gutterBottom sx={{ fontWeight: 'bold' }}>
-                Platform Features
-              </Typography>
-              <Stack spacing={1}>
-                <Typography variant="body2" sx={{ opacity: 0.8 }}>🤖 AI Topic Predictions</Typography>
-                <Typography variant="body2" sx={{ opacity: 0.8 }}>🎧 Audio Explanations</Typography>
-                <Typography variant="body2" sx={{ opacity: 0.8 }}>📚 Complete Question Banks</Typography>
-                <Typography variant="body2" sx={{ opacity: 0.8 }}>📊 Progress Tracking</Typography>
-                <Typography variant="body2" sx={{ opacity: 0.8 }}>👥 Multi-user Management</Typography>
-              </Stack>
-            </Grid>
-          </Grid>
+            <Typography variant="body2" color="grey.400">
+              © 2024 BECE Prediction Platform. All rights reserved.
+            </Typography>
+          </Stack>
         </Container>
       </Box>
     </Box>

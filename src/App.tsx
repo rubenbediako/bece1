@@ -1,5 +1,5 @@
+import React, { useState } from 'react';
 import { ThemeProvider, createTheme, CssBaseline } from '@mui/material';
-import { useState } from 'react';
 import SimpleWorkingApp from './components/SimpleWorkingApp';
 import InitialSetup from './components/InitialSetup';
 import LandingPage from './components/LandingPage';
@@ -84,10 +84,7 @@ const AppContent: React.FC = () => {
     default:
       return (
         <LandingPage
-          onNavigateToAuth={(isAdmin) => {
-            setAdminMode(isAdmin);
-            setCurrentView('auth');
-          }}
+          onGetStarted={() => setCurrentView('auth')}
         />
       );
   }

@@ -29,34 +29,34 @@ import {
 } from '@mui/icons-material';
 import { useAppContext } from '../contexts/AppContext';
 
-// Sample data for BECE subjects and topics
+// Initial example questions for BECE 2026 preparation
 const sampleQuestions = [
   {
     id: 1,
-    question: "Solve for x: 2x + 5 = 13",
-    options: ["x = 4", "x = 6", "x = 8", "x = 9"],
+    question: "What is the capital of Ghana?",
+    options: ["Accra", "Kumasi", "Tamale", "Cape Coast"],
     correctAnswer: 0,
-    explanation: "Subtract 5 from both sides: 2x = 8, then divide by 2: x = 4",
+    explanation: "Accra is the capital and largest city of Ghana.",
     difficulty: "Easy",
-    topic: "Algebra"
+    topic: "Geography"
   },
   {
     id: 2,
-    question: "What is the area of a rectangle with length 8cm and width 5cm?",
-    options: ["40 cm²", "26 cm²", "13 cm²", "80 cm²"],
+    question: "Calculate: 15 ÷ 3 + 2 × 4",
+    options: ["13", "11", "17", "9"],
     correctAnswer: 0,
-    explanation: "Area = length × width = 8 × 5 = 40 cm²",
-    difficulty: "Easy",
-    topic: "Geometry"
+    explanation: "Following order of operations: 15 ÷ 3 = 5, then 2 × 4 = 8, finally 5 + 8 = 13",
+    difficulty: "Medium",
+    topic: "Mathematics"
   },
   {
     id: 3,
-    question: "Find the mean of: 4, 7, 9, 12, 18",
-    options: ["10", "9", "11", "12"],
-    correctAnswer: 0,
-    explanation: "Mean = (4 + 7 + 9 + 12 + 18) ÷ 5 = 50 ÷ 5 = 10",
-    difficulty: "Medium",
-    topic: "Statistics"
+    question: "Which of the following is a renewable source of energy?",
+    options: ["Coal", "Solar", "Oil", "Natural Gas"],
+    correctAnswer: 1,
+    explanation: "Solar energy is renewable because it comes from the sun, which is an inexhaustible source.",
+    difficulty: "Easy",
+    topic: "Science"
   }
 ];
 

@@ -98,7 +98,7 @@ export class AudioSolutionService {
       ...config
     };
 
-    const sections = await this.createAudioSections(question, aiAnswer, fullConfig);
+    const sections = await this.createAudioSections(question, fullConfig, aiAnswer);
     const transcript = this.generateFullTranscript(sections);
     const totalDuration = sections.reduce((sum, section) => sum + section.duration, 0);
 
@@ -118,8 +118,8 @@ export class AudioSolutionService {
 
   private async createAudioSections(
     question: Question,
-    aiAnswer?: AIAnswer,
-    config: AudioSolutionConfig
+    config: AudioSolutionConfig,
+    aiAnswer?: AIAnswer
   ): Promise<AudioSection[]> {
     const sections: AudioSection[] = [];
     let order = 0;
@@ -176,7 +176,7 @@ export class AudioSolutionService {
 
     // Conclusion Section
     if (config.includeConclusion) {
-      const conclusionContent = this.generateConclusionContent(question, aiAnswer, config.style);
+      const conclusionContent = this.generateConclusionContent(question, config.style, aiAnswer);
       sections.push({
         id: this.generateId(),
         title: 'Conclusion',
@@ -286,7 +286,7 @@ export class AudioSolutionService {
     return explanation.join(' ');
   }
 
-  private generateConclusionContent(question: Question, aiAnswer?: AIAnswer, style: string): string {
+  private generateConclusionContent(question: Question, style: string, aiAnswer?: AIAnswer): string {
     const marks = question.marks || question.points || 1;
     
     switch (style) {

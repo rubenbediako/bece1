@@ -81,7 +81,7 @@ interface AppContextType {
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
 
-// Sample data - same as in AdminDashboard but centralized here
+// Initial BECE subject data for the platform
 const initialSubjects: SubjectData[] = [
   { id: 'mathematics', name: 'Mathematics', description: 'Core mathematical concepts and problem-solving', icon: '📊', color: '#2563eb', isActive: true, createdAt: '2024-10-01' },
   { id: 'english', name: 'English Language', description: 'Language skills and communication', icon: '📖', color: '#7c3aed', isActive: true, createdAt: '2024-10-01' },

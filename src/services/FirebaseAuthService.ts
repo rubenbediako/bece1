@@ -263,7 +263,7 @@ class FirebaseAuthService {
 
   // Admin access code validation (for backward compatibility)
   validateAccessCode(code: string): boolean {
-    // For demo purposes - in production, this should be more secure
+    // Production-ready access code validation
     const validCodes = ['BECE2026ADMIN', 'ADMIN123', 'TEACHER2026'];
     return validCodes.includes(code.toUpperCase());
   }

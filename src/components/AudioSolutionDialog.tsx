@@ -31,19 +31,19 @@ import {
   CircularProgress
 } from '@mui/material';
 import {
-  VolumeUp,
-  ExpandMore,
-  PlayArrow,
+  Volume2,
+  ChevronDown,
+  Play,
   Pause,
-  Stop,
+  Square,
   Settings,
-  RecordVoiceOver,
-  School,
-  Psychology,
-  AutoAwesome,
+  Mic,
+  GraduationCap,
+  Brain,
+  Sparkles,
   Download,
   Headphones
-} from '@mui/icons-material';
+} from 'lucide-react';
 import type { Question, AIAnswer, Subject, AudioExplanation, AudioSolutionConfig } from '../types';
 import AudioSolutionService from '../services/AudioSolutionService';
 
@@ -176,12 +176,12 @@ export const AudioSolutionDialog: React.FC<Props> = ({
     >
       <DialogTitle>
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-          <Headphones color="primary" />
+          <Headphones size={24} color="#1976d2" />
           <Typography variant="h6" component="div" sx={{ flexGrow: 1 }}>
             AI Audio Explanation
           </Typography>
           <IconButton onClick={() => setShowSettings(!showSettings)}>
-            <Settings />
+            <Settings size={20} />
           </IconButton>
         </Box>
       </DialogTitle>
@@ -209,7 +209,7 @@ export const AudioSolutionDialog: React.FC<Props> = ({
         {/* Audio Settings */}
         {showSettings && (
           <Accordion sx={{ mb: 3 }}>
-            <AccordionSummary expandIcon={<ExpandMore />}>
+            <AccordionSummary expandIcon={<ChevronDown size={20} />}>
               <Typography variant="subtitle1">Audio Settings</Typography>
             </AccordionSummary>
             <AccordionDetails>
@@ -333,7 +333,7 @@ export const AudioSolutionDialog: React.FC<Props> = ({
                   {!isPlaying ? (
                     <Button
                       variant="contained"
-                      startIcon={<PlayArrow />}
+                      startIcon={<Play size={20} />}
                       onClick={playAudioExplanation}
                       size="large"
                     >
@@ -343,7 +343,7 @@ export const AudioSolutionDialog: React.FC<Props> = ({
                     <Button
                       variant="contained"
                       color="secondary"
-                      startIcon={<Stop />}
+                      startIcon={<Square size={20} />}
                       onClick={stopAudioExplanation}
                       size="large"
                     >
@@ -353,7 +353,7 @@ export const AudioSolutionDialog: React.FC<Props> = ({
                   
                   <Button
                     variant="outlined"
-                    startIcon={<AutoAwesome />}
+                    startIcon={<Sparkles size={20} />}
                     onClick={generateAudioExplanation}
                     disabled={isGenerating}
                   >
@@ -395,9 +395,9 @@ export const AudioSolutionDialog: React.FC<Props> = ({
                 >
                   <ListItemIcon>
                     {currentSectionIndex === index && isPlaying ? (
-                      <VolumeUp color="primary" />
+                      <Volume2 size={20} color="#1976d2" />
                     ) : (
-                      <RecordVoiceOver />
+                      <Mic size={20} />
                     )}
                   </ListItemIcon>
                   <ListItemText
@@ -422,7 +422,7 @@ export const AudioSolutionDialog: React.FC<Props> = ({
 
             {/* Full Transcript */}
             <Accordion sx={{ mt: 3 }}>
-              <AccordionSummary expandIcon={<ExpandMore />}>
+              <AccordionSummary expandIcon={<ChevronDown size={20} />}>
                 <Typography variant="subtitle1">Full Transcript</Typography>
               </AccordionSummary>
               <AccordionDetails>
@@ -448,7 +448,7 @@ export const AudioSolutionDialog: React.FC<Props> = ({
         </Button>
         {audioExplanation && (
           <Button
-            startIcon={<Download />}
+            startIcon={<Download size={20} />}
             onClick={() => {
               // Create downloadable transcript
               const blob = new Blob([audioExplanation.transcript], { type: 'text/plain' });
